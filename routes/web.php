@@ -10,7 +10,7 @@ Route::get('/', function () {
 });
 
 Route::middleware('auth')->prefix('dashboards')->name('dashboards.')->group(function () {
-    // As rotas dos dashboards individuais são adicionadas nas Tasks 10 e 12.
+    Route::get('/pontos', [\App\Http\Controllers\Dashboards\PointsDashboardController::class, 'index'])->name('points.index');
 });
 
 Route::middleware('auth')->group(function () {
