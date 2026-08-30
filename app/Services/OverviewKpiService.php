@@ -4,14 +4,22 @@ namespace App\Services;
 
 use App\Models\Point;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 class OverviewKpiService
 {
+    private ?Collection $points = null;
+
     public function __construct(private PointStockService $stockService) {}
+
+    private function points(): Collection
+    {
+        return $this->points ??= Point::with('movements')->get();
+    }
 
     public function monthlyTotals(Carbon $start, Carbon $end): array
     {
-        $points = Point::with('movements')->get();
+        $points = $this->points();
 
         return $this->stockService->summary($points, $start, $end);
     }
@@ -49,7 +57,7 @@ class OverviewKpiService
 
     public function ranking(Carbon $start, Carbon $end, int $limit = 5): array
     {
-        $points = Point::with('movements')->get();
+        $points = $this->points();
 
         $ranked = $points->map(function (Point $point) use ($start, $end) {
             $financials = $this->stockService->financials($point, $start, $end);

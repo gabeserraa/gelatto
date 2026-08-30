@@ -1,6 +1,6 @@
 @props(['headers' => [], 'paginator' => null])
 
-<div class="overflow-x-auto rounded-lg bg-white shadow">
+<div {{ $attributes->merge(['class' => 'overflow-x-auto rounded-lg bg-white shadow']) }}>
     <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
             <tr>

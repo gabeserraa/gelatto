@@ -21,10 +21,14 @@
 
                     <h1 class="text-lg font-semibold text-gray-900">{{ $header ?? config('app.name') }}</h1>
 
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="text-sm text-gray-500 hover:text-gray-700">Sair</button>
-                    </form>
+                    <div class="flex items-center gap-4">
+                        <a href="{{ route('profile.edit') }}" class="text-sm text-gray-500 hover:text-gray-700">Perfil</a>
+
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="text-sm text-gray-500 hover:text-gray-700">Sair</button>
+                        </form>
+                    </div>
                 </div>
             </header>
 

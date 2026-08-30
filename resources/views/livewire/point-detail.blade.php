@@ -34,10 +34,22 @@
                 <h3 class="mt-8 text-sm font-medium text-gray-700">Histórico de movimentações</h3>
 
                 <x-dashboard.data-table :headers="['Data', 'Tipo', 'Quantidade (kg)', 'Custo', 'Receita']" :paginator="$movements" class="mt-2">
+                    @php
+                        $movementTypeLabels = [
+                            'reposicao' => 'Reposição',
+                            'retirada' => 'Retirada',
+                            'ajuste' => 'Ajuste',
+                        ];
+                    @endphp
                     @foreach ($movements as $movement)
                         <tr>
                             <td class="px-4 py-2 text-sm text-gray-700">{{ $movement->occurred_at->format('d/m/Y') }}</td>
-                            <td class="px-4 py-2 text-sm text-gray-700">{{ ucfirst($movement->type) }}</td>
+                            <td class="px-4 py-2 text-sm text-gray-700">
+                                {{ $movementTypeLabels[$movement->type] ?? ucfirst($movement->type) }}
+                                @if ($movement->type === 'ajuste')
+                                    ({{ $movement->adjustment_direction === 'increase' ? 'aumento' : 'redução' }})
+                                @endif
+                            </td>
                             <td class="px-4 py-2 text-sm text-gray-700">{{ number_format($movement->quantity_kg, 1) }}</td>
                             <td class="px-4 py-2 text-sm text-gray-700">{{ $movement->cost ? 'R$ '.number_format($movement->cost, 2, ',', '.') : '—' }}</td>
                             <td class="px-4 py-2 text-sm text-gray-700">{{ $movement->revenue ? 'R$ '.number_format($movement->revenue, 2, ',', '.') : '—' }}</td>

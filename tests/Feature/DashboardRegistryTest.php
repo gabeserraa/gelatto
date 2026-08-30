@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class DashboardRegistryTest extends TestCase
@@ -18,6 +19,7 @@ class DashboardRegistryTest extends TestCase
             $this->assertArrayHasKey('icon', $item);
             $this->assertArrayHasKey('route', $item);
             $this->assertArrayHasKey('order', $item);
+            $this->assertTrue(Route::has($item['route']), "Route {$item['route']} is not registered.");
         }
     }
 }
