@@ -23,4 +23,15 @@ class PointMovementFactory extends Factory
             'notes' => null,
         ];
     }
+
+    public function reposicao(): static
+    {
+        return $this->state(fn () => [
+            'type' => 'reposicao',
+            'quantity_kg' => $this->faker->randomFloat(2, 20, 60),
+            'cost' => $this->faker->randomFloat(2, 40, 120),
+            'revenue' => null,
+            'adjustment_direction' => null,
+        ]);
+    }
 }

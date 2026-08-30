@@ -14,5 +14,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@gelatto.com.br',
             'password' => bcrypt('password'),
         ]);
+
+        $this->call(PointSeeder::class);
     }
 }
