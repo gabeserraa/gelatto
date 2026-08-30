@@ -8,13 +8,15 @@
 
     <nav class="mt-2 space-y-1 px-2">
         @foreach (collect(config('dashboards.items'))->sortBy('order') as $item)
-            <a
-                href="{{ route($item['route']) }}"
-                class="flex items-center rounded-md px-3 py-2 text-sm font-medium {{ request()->routeIs($item['route']) ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }}"
-            >
-                <x-dashboard.icon :name="$item['icon']" class="mr-3 h-5 w-5" />
-                {{ $item['name'] }}
-            </a>
+            @if (Route::has($item['route']))
+                <a
+                    href="{{ route($item['route']) }}"
+                    class="flex items-center rounded-md px-3 py-2 text-sm font-medium {{ request()->routeIs($item['route']) ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }}"
+                >
+                    <x-dashboard.icon :name="$item['icon']" class="mr-3 h-5 w-5" />
+                    {{ $item['name'] }}
+                </a>
+            @endif
         @endforeach
     </nav>
 </aside>

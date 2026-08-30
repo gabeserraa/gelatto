@@ -4,7 +4,9 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('dashboards.points.index');
+    return Route::has('dashboards.points.index')
+        ? redirect()->route('dashboards.points.index')
+        : redirect()->route('login');
 });
 
 Route::middleware('auth')->prefix('dashboards')->name('dashboards.')->group(function () {
