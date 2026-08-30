@@ -7,7 +7,6 @@ use App\Models\PointMovement;
 use App\Services\OverviewKpiService;
 use App\Services\PointStockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class OverviewKpiServiceTest extends TestCase
@@ -19,7 +18,7 @@ class OverviewKpiServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new OverviewKpiService(new PointStockService());
+        $this->service = new OverviewKpiService(new PointStockService);
     }
 
     public function test_last_12_months_series_has_12_entries(): void

@@ -7,9 +7,7 @@ use Illuminate\Support\Carbon;
 
 class OverviewKpiService
 {
-    public function __construct(private PointStockService $stockService)
-    {
-    }
+    public function __construct(private PointStockService $stockService) {}
 
     public function monthlyTotals(Carbon $start, Carbon $end): array
     {
