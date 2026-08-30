@@ -1,36 +1,41 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ config('app.name', 'Gelatto ICE CO.') }} - {{ $header ?? '' }}</title>
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
+</head>
+<body class="bg-gray-100 antialiased" x-data="{ sidebarOpen: false }">
+    <div class="flex min-h-screen">
+        @include('layouts.partials.sidebar')
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <div class="flex-1">
+            <header class="bg-white shadow">
+                <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+                    <button class="md:hidden" @click="sidebarOpen = !sidebarOpen" aria-label="Abrir menu">
+                        <x-dashboard.icon name="menu" class="h-6 w-6 text-gray-700" />
+                    </button>
 
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
-            @include('layouts.navigation')
+                    <h1 class="text-lg font-semibold text-gray-900">{{ $header ?? config('app.name') }}</h1>
 
-            <!-- Page Heading -->
-            @if (isset($header))
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endif
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="text-sm text-gray-500 hover:text-gray-700">Sair</button>
+                    </form>
+                </div>
+            </header>
 
-            <!-- Page Content -->
-            <main>
+            <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                 {{ $slot }}
             </main>
         </div>
-    </body>
+    </div>
+
+    <x-toast />
+
+    @livewireScripts
+</body>
 </html>
