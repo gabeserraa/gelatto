@@ -45,6 +45,57 @@ class PointStockService
         return round($withdrawals->sum(fn ($movement) => (float) $movement->quantity_kg) / $monthsWithData, 2);
     }
 
+    public function costPerKg(Point $point, Carbon $start, Carbon $end): float
+    {
+        $reposicoes = $point->movements->filter(
+            fn ($movement) => $movement->type === 'reposicao'
+                && $movement->cost !== null
+                && $movement->occurred_at->between($start, $end)
+        );
+
+        $totalQuantity = (float) $reposicoes->sum(fn ($m) => (float) $m->quantity_kg);
+
+        if ($totalQuantity <= 0) {
+            return 0.0;
+        }
+
+        $totalCost = (float) $reposicoes->sum(fn ($m) => (float) $m->cost);
+
+        return round($totalCost / $totalQuantity, 2);
+    }
+
+    public function stockValue(Point $point, Carbon $start, Carbon $end): float
+    {
+        return round($this->currentStock($point) * $this->costPerKg($point, $start, $end), 2);
+    }
+
+    public function turnoverRate(Collection $points, Carbon $start, Carbon $end): float
+    {
+        $rates = [];
+
+        foreach ($points as $point) {
+            $entrada = (float) $point->movements
+                ->filter(fn ($m) => $m->type === 'reposicao' && $m->occurred_at->between($start, $end))
+                ->sum(fn ($m) => (float) $m->quantity_kg);
+
+            if ($entrada <= 0) {
+                continue;
+            }
+
+            $saida = (float) $point->movements
+                ->filter(fn ($m) => $m->type === 'retirada' && $m->occurred_at->between($start, $end))
+                ->sum(fn ($m) => (float) $m->quantity_kg);
+
+            $rates[] = $saida / $entrada;
+        }
+
+        if (empty($rates)) {
+            return 0.0;
+        }
+
+        return round((array_sum($rates) / count($rates)) * 100, 1);
+    }
+
     public function dailyAverageWithdrawal(Point $point, ?int $months = null): float
     {
         return round($this->monthlyAverageWithdrawal($point, $months) / 30, 2);

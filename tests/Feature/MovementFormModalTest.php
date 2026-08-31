@@ -58,4 +58,41 @@ class MovementFormModalTest extends TestCase
             'point_id' => $point->id, 'type' => 'retirada', 'quantity_kg' => 12.5,
         ]);
     }
+
+    public function test_converts_cost_per_kg_input_into_total_cost_stored_on_the_movement(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $point = Point::factory()->create();
+
+        Livewire::test(MovementFormModal::class)
+            ->call('open', $point->id)
+            ->set('type', 'reposicao')
+            ->set('quantity_kg', 40)
+            ->set('cost_per_kg', 1.80)
+            ->set('occurred_at', now()->format('Y-m-d'))
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('point_movements', [
+            'point_id' => $point->id, 'type' => 'reposicao', 'quantity_kg' => 40, 'cost' => 72,
+        ]);
+    }
+
+    public function test_cost_per_kg_is_optional(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $point = Point::factory()->create();
+
+        Livewire::test(MovementFormModal::class)
+            ->call('open', $point->id)
+            ->set('type', 'retirada')
+            ->set('quantity_kg', 10)
+            ->set('occurred_at', now()->format('Y-m-d'))
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('point_movements', [
+            'point_id' => $point->id, 'type' => 'retirada', 'quantity_kg' => 10, 'cost' => null,
+        ]);
+    }
 }

@@ -11,6 +11,9 @@
         @case('menu')
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
             @break
+        @case('archive-box')
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 7.5h16.5M3.75 7.5v10.5A2.25 2.25 0 006 20.25h12a2.25 2.25 0 002.25-2.25V7.5M3.75 7.5l1.5-3h13.5l1.5 3M10.5 12h3" />
+            @break
         @default
             <circle cx="12" cy="12" r="8" stroke-linecap="round" />
     @endswitch

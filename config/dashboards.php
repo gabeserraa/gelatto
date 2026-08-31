@@ -23,6 +23,13 @@ return [
             'route' => 'dashboards.overview.index',
             'order' => 2,
         ],
+        [
+            'key' => 'inventory',
+            'name' => 'Estoque',
+            'icon' => 'archive-box',
+            'route' => 'dashboards.inventory.index',
+            'order' => 3,
+        ],
         // Fora de escopo — registrar aqui quando forem implementados:
         // 'financeiro'  — fluxo de caixa, custos fixos x variáveis
         // 'reposicao'   — ranking de urgência de reposição, rota semanal

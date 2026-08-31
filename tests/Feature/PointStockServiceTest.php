@@ -210,6 +210,98 @@ class PointStockServiceTest extends TestCase
         $this->assertSame('repor_em_breve', $this->service->restockUrgency($point));
     }
 
+    public function test_cost_per_kg_averages_reposicao_cost_within_period(): void
+    {
+        $point = Point::factory()->create();
+
+        PointMovement::factory()->create([
+            'point_id' => $point->id, 'type' => 'reposicao', 'quantity_kg' => 40,
+            'cost' => 72, 'occurred_at' => Carbon::create(2026, 3, 10),
+        ]);
+        PointMovement::factory()->create([
+            'point_id' => $point->id, 'type' => 'reposicao', 'quantity_kg' => 10,
+            'cost' => 18, 'occurred_at' => Carbon::create(2026, 3, 20),
+        ]);
+        PointMovement::factory()->create([
+            'point_id' => $point->id, 'type' => 'reposicao', 'quantity_kg' => 999,
+            'cost' => 999, 'occurred_at' => Carbon::create(2026, 4, 1),
+        ]);
+
+        $point->load('movements');
+
+        // (72+18) / (40+10) = 1.80
+        $this->assertSame(1.8, $this->service->costPerKg($point, Carbon::create(2026, 3, 1), Carbon::create(2026, 3, 31)));
+    }
+
+    public function test_cost_per_kg_is_zero_when_no_reposicao_cost_in_period(): void
+    {
+        $point = Point::factory()->create();
+        $point->load('movements');
+
+        $this->assertSame(0.0, $this->service->costPerKg($point, now()->startOfMonth(), now()->endOfMonth()));
+    }
+
+    public function test_stock_value_multiplies_current_stock_by_cost_per_kg(): void
+    {
+        $point = Point::factory()->create();
+
+        PointMovement::factory()->create([
+            'point_id' => $point->id, 'type' => 'reposicao', 'quantity_kg' => 100,
+            'cost' => 180, 'occurred_at' => now(),
+        ]);
+        PointMovement::factory()->create([
+            'point_id' => $point->id, 'type' => 'retirada', 'quantity_kg' => 30, 'occurred_at' => now(),
+        ]);
+
+        $point->load('movements');
+
+        // currentStock = 70kg, custo/kg = 180/100 = 1.80 -> 126.0
+        $this->assertSame(126.0, $this->service->stockValue($point, now()->startOfMonth(), now()->endOfMonth()));
+    }
+
+    public function test_turnover_rate_is_the_simple_average_of_saida_over_entrada_per_point(): void
+    {
+        $a = Point::factory()->create();
+        $b = Point::factory()->create();
+
+        PointMovement::factory()->create([
+            'point_id' => $a->id, 'type' => 'reposicao', 'quantity_kg' => 400, 'occurred_at' => now(),
+        ]);
+        PointMovement::factory()->create([
+            'point_id' => $a->id, 'type' => 'retirada', 'quantity_kg' => 358, 'occurred_at' => now(),
+        ]);
+        PointMovement::factory()->create([
+            'point_id' => $b->id, 'type' => 'reposicao', 'quantity_kg' => 200, 'occurred_at' => now(),
+        ]);
+        PointMovement::factory()->create([
+            'point_id' => $b->id, 'type' => 'retirada', 'quantity_kg' => 44, 'occurred_at' => now(),
+        ]);
+
+        $points = collect([$a, $b])->each->load('movements');
+
+        // (358/400 + 44/200) / 2 = (0.895 + 0.22) / 2 = 0.5575 -> 55.75%... rounded
+        $rate = $this->service->turnoverRate($points, now()->startOfMonth(), now()->endOfMonth());
+
+        $this->assertSame(55.8, $rate);
+    }
+
+    public function test_turnover_rate_ignores_points_with_no_entrada_in_period(): void
+    {
+        $a = Point::factory()->create();
+        $b = Point::factory()->create();
+
+        PointMovement::factory()->create([
+            'point_id' => $a->id, 'type' => 'reposicao', 'quantity_kg' => 100, 'occurred_at' => now(),
+        ]);
+        PointMovement::factory()->create([
+            'point_id' => $a->id, 'type' => 'retirada', 'quantity_kg' => 50, 'occurred_at' => now(),
+        ]);
+
+        $points = collect([$a, $b])->each->load('movements');
+
+        $this->assertSame(50.0, $this->service->turnoverRate($points, now()->startOfMonth(), now()->endOfMonth()));
+    }
+
     public function test_restock_urgency_is_ok_when_plenty_of_days_remain(): void
     {
         $point = Point::factory()->create();

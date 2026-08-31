@@ -14,7 +14,7 @@ class MovementFormModal extends Component
     public string $type = 'retirada';
     public ?float $quantity_kg = null;
     public ?string $adjustment_direction = null;
-    public ?float $cost = null;
+    public ?float $cost_per_kg = null;
     public ?float $revenue = null;
     public string $occurred_at = '';
     public ?string $notes = null;
@@ -25,7 +25,7 @@ class MovementFormModal extends Component
             'type' => 'required|in:reposicao,retirada,ajuste',
             'quantity_kg' => 'required|numeric|min:0.01',
             'adjustment_direction' => 'required_if:type,ajuste|nullable|in:increase,decrease',
-            'cost' => 'nullable|numeric|min:0',
+            'cost_per_kg' => 'nullable|numeric|min:0',
             'revenue' => 'nullable|numeric|min:0',
             'occurred_at' => 'required|date',
             'notes' => 'nullable|string',
@@ -39,7 +39,7 @@ class MovementFormModal extends Component
         $this->type = 'retirada';
         $this->quantity_kg = null;
         $this->adjustment_direction = null;
-        $this->cost = null;
+        $this->cost_per_kg = null;
         $this->revenue = null;
         $this->occurred_at = now()->format('Y-m-d');
         $this->notes = null;
@@ -51,6 +51,11 @@ class MovementFormModal extends Component
     {
         $data = $this->validate();
         $data['point_id'] = $this->pointId;
+
+        $data['cost'] = $this->cost_per_kg !== null
+            ? round($this->cost_per_kg * $this->quantity_kg, 2)
+            : null;
+        unset($data['cost_per_kg']);
 
         if ($data['type'] !== 'ajuste') {
             $data['adjustment_direction'] = null;

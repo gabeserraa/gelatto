@@ -10,6 +10,8 @@ Route::get('/', function () {
 Route::middleware('auth')->prefix('dashboards')->name('dashboards.')->group(function () {
     Route::get('/pontos', [\App\Http\Controllers\Dashboards\PointsDashboardController::class, 'index'])->name('points.index');
     Route::get('/geral', [\App\Http\Controllers\Dashboards\OverviewDashboardController::class, 'index'])->name('overview.index');
+    Route::get('/estoque', [\App\Http\Controllers\Dashboards\InventoryDashboardController::class, 'index'])->name('inventory.index');
+    Route::get('/estoque/exportar', [\App\Http\Controllers\Dashboards\InventoryDashboardController::class, 'export'])->name('inventory.export');
 });
 
 Route::middleware('auth')->group(function () {

@@ -34,9 +34,9 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Custo (R$)</label>
-                            <input type="number" step="0.01" wire:model="cost" class="mt-1 w-full rounded-md border-gray-300">
-                            @error('cost') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                            <label class="block text-sm font-medium text-gray-700">Custo unit. (R$/kg)</label>
+                            <input type="number" step="0.01" wire:model="cost_per_kg" class="mt-1 w-full rounded-md border-gray-300">
+                            @error('cost_per_kg') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Receita (R$)</label>
