@@ -1,0 +1,73 @@
+import { NavLink } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import {
+  IconHome,
+  IconSnowflake,
+  IconBox,
+  IconChart,
+  IconFile,
+  IconSettings,
+} from './icons'
+
+const NAV_ITEMS = [
+  { to: '/', label: 'Visão Geral', icon: IconHome, end: true },
+  { to: '/pontos', label: 'Pontos de Freezer', icon: IconSnowflake },
+  { to: '/estoque', label: 'Estoque', icon: IconBox },
+  { to: '/financeiro', label: 'Financeiro & Lucro', icon: IconChart },
+  { to: '/relatorios', label: 'Relatórios', icon: IconFile },
+  { to: '/configuracoes', label: 'Configurações', icon: IconSettings },
+]
+
+export default function Sidebar() {
+  const { profile, user } = useAuth()
+  const name = profile?.full_name || user?.email || 'Usuário'
+  const initials = name
+    .split(' ')
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+
+  return (
+    <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col bg-navy-950 lg:flex">
+      <div className="flex items-center gap-2 px-5 py-6">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-500/[0.18]">
+          <IconSnowflake className="h-5 w-5 text-cyan-400" />
+        </span>
+        <span className="font-display text-base font-semibold text-white">Gelatto ICE CO.</span>
+      </div>
+
+      <nav className="flex-1 space-y-1 px-3">
+        {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-[9px] px-3 py-2.5 text-sm font-medium transition-colors ${
+                isActive
+                  ? 'bg-cyan-500/[0.13] text-cyan-400'
+                  : 'text-slate-300 hover:bg-white/5 hover:text-white'
+              }`
+            }
+          >
+            <Icon className="h-[18px] w-[18px]" />
+            {label}
+          </NavLink>
+        ))}
+      </nav>
+
+      <div className="mt-auto flex items-center gap-3 border-t border-white/10 px-5 py-4">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-navy-700 text-xs font-semibold text-white">
+          {initials || '?'}
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-white">{name}</p>
+          <p className="truncate text-xs text-slate-400">
+            {profile?.role === 'admin' ? 'Administrador' : 'Operador'}
+          </p>
+        </div>
+      </div>
+    </aside>
+  )
+}
