@@ -40,7 +40,7 @@ class OverviewKpiService
         $series = [];
 
         for ($i = 11; $i >= 0; $i--) {
-            $start = now()->subMonths($i)->startOfMonth();
+            $start = now()->subMonthsNoOverflow($i)->startOfMonth();
             $end = $start->copy()->endOfMonth();
             $totals = $this->monthlyTotals($start, $end);
 

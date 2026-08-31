@@ -32,6 +32,22 @@ class OverviewKpiServiceTest extends TestCase
         $this->assertArrayHasKey('profit', $series[0]);
     }
 
+    public function test_last_12_months_series_has_no_duplicate_or_skipped_months_across_a_day_31_boundary(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 8, 31));
+
+        $series = $this->service->last12MonthsSeries();
+
+        $labels = collect($series)->pluck('label')->all();
+
+        $this->assertSame([
+            'set/25', 'out/25', 'nov/25', 'dez/25', 'jan/26', 'fev/26',
+            'mar/26', 'abr/26', 'mai/26', 'jun/26', 'jul/26', 'ago/26',
+        ], $labels);
+
+        Carbon::setTestNow();
+    }
+
     public function test_ranking_orders_points_by_profit_descending(): void
     {
         $high = Point::factory()->create(['name' => 'Ponto Lucrativo']);
