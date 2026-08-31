@@ -44,7 +44,15 @@ return [
             'route' => 'dashboards.reports.index',
             'order' => 5,
         ],
+        [
+            'key' => 'settings',
+            'name' => 'Configurações',
+            'icon' => 'cog',
+            'route' => 'dashboards.settings.index',
+            'order' => 6,
+        ],
         // Fora de escopo — registrar aqui quando forem implementados:
+        // 'usuarios'    — multiplos usuarios com papeis (contradiz "um unico administrador" do spec)
         // 'reposicao'   — ranking de urgência de reposição, rota semanal
         // 'mapa'        — pontos no mapa (Leaflet.js + OpenStreetMap)
         // 'clientes'    — dados de contato/relacionamento por parceiro

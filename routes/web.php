@@ -20,6 +20,15 @@ Route::middleware('auth')->prefix('dashboards')->name('dashboards.')->group(func
         Route::get('/consumo', [\App\Http\Controllers\Dashboards\ReportsDashboardController::class, 'exportConsumption'])->name('consumption');
         Route::get('/reposicoes', [\App\Http\Controllers\Dashboards\ReportsDashboardController::class, 'exportReplenishments'])->name('replenishments');
     });
+
+    Route::prefix('configuracoes')->name('settings.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Dashboards\SettingsController::class, 'index'])->name('index');
+        Route::get('/empresa', [\App\Http\Controllers\Dashboards\SettingsController::class, 'company'])->name('company');
+        Route::put('/empresa', [\App\Http\Controllers\Dashboards\SettingsController::class, 'updateCompany'])->name('company.update');
+        Route::get('/preferencias', [\App\Http\Controllers\Dashboards\SettingsController::class, 'preferences'])->name('preferences');
+        Route::put('/preferencias', [\App\Http\Controllers\Dashboards\SettingsController::class, 'updatePreferences'])->name('preferences.update');
+        Route::get('/integracoes', [\App\Http\Controllers\Dashboards\SettingsController::class, 'integrations'])->name('integrations');
+    });
 });
 
 Route::middleware('auth')->group(function () {

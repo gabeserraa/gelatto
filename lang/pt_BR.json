@@ -35,5 +35,7 @@
     "Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.": "Assim que sua conta for excluída, todos os seus recursos e dados serão permanentemente apagados. Digite sua senha para confirmar que deseja excluir permanentemente sua conta.",
     "Cancel": "Cancelar",
     "Dashboard": "Painel",
-    "You're logged in!": "Você está conectado!"
+    "You're logged in!": "Você está conectado!",
+    "Job title": "Cargo",
+    "Phone": "Telefone"
 }

@@ -21,6 +21,15 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'job_title',
+        'phone',
+        'dark_mode',
+        'currency',
+        'timezone',
+        'notify_critical_stock',
+        'notify_low_stock',
+        'notify_daily_financial_report',
+        'notify_report_generated',
     ];
 
     /**
@@ -40,5 +49,10 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'dark_mode' => 'boolean',
+        'notify_critical_stock' => 'boolean',
+        'notify_low_stock' => 'boolean',
+        'notify_daily_financial_report' => 'boolean',
+        'notify_report_generated' => 'boolean',
     ];
 }
