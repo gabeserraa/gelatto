@@ -137,7 +137,7 @@ export default function Fabrica() {
         </table>
       </div>
 
-      {showModal && <MovementModal table="movimentacoes_fabrica" onClose={() => setShowModal(false)} onSaved={handleSaved} />}
+      {showModal && <MovementModal onClose={() => setShowModal(false)} onSaved={handleSaved} />}
     </div>
   )
 }

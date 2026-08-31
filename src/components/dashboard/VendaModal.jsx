@@ -1,24 +1,30 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 
-export default function MovementModal({ onClose, onSaved }) {
-  const [tipo, setTipo] = useState('entrada')
+export default function VendaModal({ pontos, defaultPontoId, onClose, onSaved }) {
+  const [pontoId, setPontoId] = useState(defaultPontoId ?? pontos[0]?.id ?? '')
   const [quantidade, setQuantidade] = useState('')
-  const [valorUnitario, setValorUnitario] = useState('')
+  const [precoVenda, setPrecoVenda] = useState('')
+  const [custo, setCusto] = useState('')
   const [data, setData] = useState(() => new Date().toISOString().slice(0, 10))
   const [observacao, setObservacao] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+
+  useEffect(() => {
+    if (defaultPontoId) setPontoId(defaultPontoId)
+  }, [defaultPontoId])
 
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
     setError(null)
 
-    const { error } = await supabase.from('movimentacoes_fabrica').insert({
-      tipo,
+    const { error } = await supabase.from('movimentacoes_estoque').insert({
+      ponto_id: pontoId,
       quantidade_kg: Number(quantidade),
-      valor_unitario: Number(valorUnitario),
+      preco_venda_kg: Number(precoVenda),
+      custo_kg: Number(custo),
       data,
       observacao: observacao || null,
     })
@@ -35,40 +41,48 @@ export default function MovementModal({ onClose, onSaved }) {
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-navy-950/40 px-4">
       <div className="w-full max-w-md rounded-card border border-slate-200 bg-white p-6 shadow-card">
-        <h2 className="font-display text-base font-semibold text-navy-950">Registrar Movimentação</h2>
+        <h2 className="font-display text-base font-semibold text-navy-950">Registrar Venda</h2>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setTipo('entrada')}
-              className={`rounded-[10px] px-3 py-2 text-sm font-semibold transition-colors ${
-                tipo === 'entrada' ? 'bg-navy-950 text-white' : 'bg-slate-100 text-slate-500'
-              }`}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Ponto</label>
+            <select
+              required
+              value={pontoId}
+              onChange={(e) => setPontoId(e.target.value)}
+              className="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm text-navy-950 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
             >
-              Entrada
-            </button>
-            <button
-              type="button"
-              onClick={() => setTipo('saida')}
-              className={`rounded-[10px] px-3 py-2 text-sm font-semibold transition-colors ${
-                tipo === 'saida' ? 'bg-navy-950 text-white' : 'bg-slate-100 text-slate-500'
-              }`}
-            >
-              Saída
-            </button>
+              {pontos.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Quantidade (kg)</label>
+            <input
+              type="number"
+              min="0.1"
+              step="0.1"
+              required
+              value={quantidade}
+              onChange={(e) => setQuantidade(e.target.value)}
+              className="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm text-navy-950 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Quantidade (kg)</label>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Preço venda/kg (R$)</label>
               <input
                 type="number"
-                min="0.1"
-                step="0.1"
+                min="0"
+                step="0.01"
                 required
-                value={quantidade}
-                onChange={(e) => setQuantidade(e.target.value)}
+                value={precoVenda}
+                onChange={(e) => setPrecoVenda(e.target.value)}
                 className="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm text-navy-950 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
               />
             </div>
@@ -79,8 +93,8 @@ export default function MovementModal({ onClose, onSaved }) {
                 min="0"
                 step="0.01"
                 required
-                value={valorUnitario}
-                onChange={(e) => setValorUnitario(e.target.value)}
+                value={custo}
+                onChange={(e) => setCusto(e.target.value)}
                 className="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm text-navy-950 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
               />
             </div>

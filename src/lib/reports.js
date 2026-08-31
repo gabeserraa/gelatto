@@ -3,12 +3,11 @@ import { supabase } from './supabaseClient'
 export const REPORT_TYPES = {
   consumo_por_ponto: {
     label: 'Consumo por Ponto',
-    description: 'Total de saídas (kg) por ponto no período selecionado.',
+    description: 'Total vendido (kg) por ponto no período selecionado.',
     async fetch(inicio, fim) {
       const { data } = await supabase
         .from('movimentacoes_estoque')
         .select('quantidade_kg, pontos(nome)')
-        .eq('tipo', 'saida')
         .gte('data', inicio)
         .lte('data', fim)
       const byPonto = {}
@@ -39,19 +38,24 @@ export const REPORT_TYPES = {
     },
   },
   reposicoes: {
-    label: 'Reposições',
-    description: 'Entradas de estoque (reposições) registradas no período.',
+    label: 'Vendas e Entregas',
+    description: 'Histórico detalhado de vendas/entregas por ponto no período.',
     async fetch(inicio, fim) {
       const { data } = await supabase
         .from('movimentacoes_estoque')
-        .select('data, quantidade_kg, valor_unitario, pontos(nome)')
-        .eq('tipo', 'entrada')
+        .select('data, quantidade_kg, preco_venda_kg, custo_kg, pontos(nome)')
         .gte('data', inicio)
         .lte('data', fim)
         .order('data')
       return {
-        columns: ['Data', 'Ponto', 'Quantidade (kg)', 'Custo/kg'],
-        rows: (data ?? []).map((r) => [r.data, r.pontos?.nome ?? '—', r.quantidade_kg, r.valor_unitario.toFixed(2)]),
+        columns: ['Data', 'Ponto', 'Quantidade (kg)', 'Preço venda/kg', 'Custo/kg'],
+        rows: (data ?? []).map((r) => [
+          r.data,
+          r.pontos?.nome ?? '—',
+          r.quantidade_kg,
+          r.preco_venda_kg.toFixed(2),
+          r.custo_kg.toFixed(2),
+        ]),
       }
     },
   },

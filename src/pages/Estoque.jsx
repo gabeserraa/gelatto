@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { usePontosEstoque } from '../lib/usePontosEstoque'
-import MovementModal from '../components/dashboard/MovementModal'
+import VendaModal from '../components/dashboard/VendaModal'
 import StatCard from '../components/dashboard/StatCard'
 import UrgencyBadge from '../components/dashboard/UrgencyBadge'
 import { IconTrash } from '../components/icons'
@@ -16,7 +16,7 @@ export default function Estoque() {
   const loadMovimentacoes = useCallback(async () => {
     const { data } = await supabase
       .from('movimentacoes_estoque')
-      .select('id, tipo, quantidade_kg, valor_unitario, data, pontos(nome)')
+      .select('id, quantidade_kg, preco_venda_kg, custo_kg, data, pontos(nome)')
       .order('data', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(50)
@@ -105,7 +105,7 @@ export default function Estoque() {
           onClick={() => setShowModal(true)}
           className="rounded-[10px] bg-navy-950 px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800"
         >
-          Registrar Movimentação
+          Registrar Venda
         </button>
       </div>
 
@@ -154,7 +154,7 @@ export default function Estoque() {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50/60">
             <tr>
-              {['Data', 'Ponto', 'Tipo', 'Quantidade', 'Valor/kg', ''].map((h) => (
+              {['Data', 'Ponto', 'Quantidade', 'Preço/kg', 'Custo/kg', 'Lucro', ''].map((h) => (
                 <th key={h} className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                   {h}
                 </th>
@@ -164,8 +164,8 @@ export default function Estoque() {
           <tbody className="divide-y divide-slate-100">
             {movimentacoes.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-slate-400">
-                  Nenhuma movimentação registrada ainda.
+                <td colSpan={7} className="px-4 py-6 text-center text-slate-400">
+                  Nenhuma venda registrada ainda.
                 </td>
               </tr>
             )}
@@ -173,17 +173,12 @@ export default function Estoque() {
               <tr key={m.id}>
                 <td className="px-4 py-3 text-slate-600">{m.data}</td>
                 <td className="px-4 py-3 font-medium text-navy-950">{m.pontos?.nome ?? '—'}</td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`rounded-full px-2.5 py-[3px] text-[11px] font-semibold ${
-                      m.tipo === 'entrada' ? 'bg-emerald-100 text-emerald-700' : 'bg-cyan-100 text-cyan-700'
-                    }`}
-                  >
-                    {m.tipo === 'entrada' ? 'Entrada' : 'Saída'}
-                  </span>
-                </td>
                 <td className="px-4 py-3 text-slate-600">{formatKg(m.quantidade_kg)}</td>
-                <td className="px-4 py-3 text-slate-600">{formatCurrency(m.valor_unitario)}</td>
+                <td className="px-4 py-3 text-slate-600">{formatCurrency(m.preco_venda_kg)}</td>
+                <td className="px-4 py-3 text-slate-600">{formatCurrency(m.custo_kg)}</td>
+                <td className="px-4 py-3 font-medium text-emerald-700">
+                  {formatCurrency(m.quantidade_kg * (m.preco_venda_kg - m.custo_kg))}
+                </td>
                 <td className="px-4 py-3 text-right">
                   <button
                     onClick={() => handleDeleteMovimentacao(m)}
@@ -200,7 +195,7 @@ export default function Estoque() {
       </div>
 
       {showModal && (
-        <MovementModal pontos={pontos} onClose={() => setShowModal(false)} onSaved={handleMovementSaved} />
+        <VendaModal pontos={pontos} onClose={() => setShowModal(false)} onSaved={handleMovementSaved} />
       )}
     </div>
   )

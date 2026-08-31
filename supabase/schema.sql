@@ -19,13 +19,16 @@ create table if not exists pontos (
   created_at timestamptz not null default now()
 );
 
+-- Cada linha e uma venda/entrega completa pro ponto: entrega + venda no
+-- mesmo lancamento, com preco e custo por kg lado a lado. Nao ha um
+-- evento separado de "saida" — o estoque do freezer e estimado por
+-- decaimento a partir da data da entrega (ver v_pontos_estoque).
 create table if not exists movimentacoes_estoque (
   id uuid primary key default gen_random_uuid(),
   ponto_id uuid not null references pontos(id) on delete cascade,
-  tipo text not null check (tipo in ('entrada', 'saida')),
   quantidade_kg numeric not null check (quantidade_kg > 0),
-  -- entrada: custo pago por kg. saida: preço de venda por kg.
-  valor_unitario numeric not null check (valor_unitario >= 0),
+  preco_venda_kg numeric not null check (preco_venda_kg >= 0),
+  custo_kg numeric not null check (custo_kg >= 0),
   data date not null default current_date,
   observacao text,
   created_by uuid references auth.users(id),
@@ -84,45 +87,46 @@ create index if not exists idx_movimentacoes_data on movimentacoes_estoque(data)
 -- Views — lucro/margem/estoque are always derived, never stored
 -- ============================================================
 
--- Estoque atual e custo médio ponderado por ponto (a partir de todas as entradas).
+-- Estoque atual do freezer: soma, entre todas as vendas do ponto, o que
+-- sobra de cada entrega apos o consumo medio estimado desde a data dela
+-- (nao ha evento separado de saida — a venda ja e a entrega).
 create or replace view v_pontos_estoque as
 select
   p.*,
-  coalesce(ent.total_kg, 0) - coalesce(sai.total_kg, 0) as estoque_atual_kg,
-  case when coalesce(ent.total_kg, 0) > 0
-    then ent.total_valor / ent.total_kg
-    else 0
-  end as custo_medio_kg,
-  greatest(ent.ultimo, sai.ultimo) as ultimo_movimento,
-  case when p.consumo_medio_dia > 0
-    then round((coalesce(ent.total_kg, 0) - coalesce(sai.total_kg, 0)) / p.consumo_medio_dia, 1)
+  coalesce(v.estoque_atual_kg, 0) as estoque_atual_kg,
+  coalesce(v.custo_medio_kg, 0) as custo_medio_kg,
+  v.ultimo_movimento,
+  case when p.consumo_medio_dia > 0 and v.estoque_atual_kg is not null
+    then round(v.estoque_atual_kg / p.consumo_medio_dia, 1)
     else null
   end as previsao_esgotamento_dias
 from pontos p
 left join (
-  select ponto_id, sum(quantidade_kg) total_kg, sum(quantidade_kg * valor_unitario) total_valor, max(data) ultimo
-  from movimentacoes_estoque where tipo = 'entrada' group by ponto_id
-) ent on ent.ponto_id = p.id
-left join (
-  select ponto_id, sum(quantidade_kg) total_kg, max(data) ultimo
-  from movimentacoes_estoque where tipo = 'saida' group by ponto_id
-) sai on sai.ponto_id = p.id;
+  select
+    ponto_id,
+    sum(greatest(quantidade_kg - consumo_medio_dia_ref * (current_date - data), 0)) as estoque_atual_kg,
+    sum(quantidade_kg * custo_kg) / nullif(sum(quantidade_kg), 0) as custo_medio_kg,
+    max(data) as ultimo_movimento
+  from (
+    select m.*, p2.consumo_medio_dia as consumo_medio_dia_ref
+    from movimentacoes_estoque m
+    join pontos p2 on p2.id = m.ponto_id
+  ) m
+  group by ponto_id
+) v on v.ponto_id = p.id;
 
--- Cada saída (venda) com receita/custo/lucro/margem calculados no custo médio do ponto.
+-- Cada venda ja tem receita/custo/lucro/margem direto nos seus proprios campos.
 create or replace view v_movimentacoes_margem as
 select
   m.*,
-  pe.custo_medio_kg,
-  m.quantidade_kg * m.valor_unitario as receita,
-  m.quantidade_kg * pe.custo_medio_kg as custo,
-  m.quantidade_kg * (m.valor_unitario - pe.custo_medio_kg) as lucro,
-  case when m.valor_unitario > 0
-    then round(((m.valor_unitario - pe.custo_medio_kg) / m.valor_unitario) * 100, 1)
+  m.quantidade_kg * m.preco_venda_kg as receita,
+  m.quantidade_kg * m.custo_kg as custo,
+  m.quantidade_kg * (m.preco_venda_kg - m.custo_kg) as lucro,
+  case when m.preco_venda_kg > 0
+    then round(((m.preco_venda_kg - m.custo_kg) / m.preco_venda_kg) * 100, 1)
     else 0
   end as margem_pct
-from movimentacoes_estoque m
-join v_pontos_estoque pe on pe.id = m.ponto_id
-where m.tipo = 'saida';
+from movimentacoes_estoque m;
 
 -- Receita/custo/lucro por mês (últimos 12 meses).
 create or replace view v_financeiro_mensal as

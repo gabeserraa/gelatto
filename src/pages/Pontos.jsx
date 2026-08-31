@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import { usePontosEstoque } from '../lib/usePontosEstoque'
 import UrgencyBadge, { urgencyFromRatio } from '../components/dashboard/UrgencyBadge'
 import ProgressBar from '../components/dashboard/ProgressBar'
-import MovementModal from '../components/dashboard/MovementModal'
+import VendaModal from '../components/dashboard/VendaModal'
 import PontoFormModal from '../components/dashboard/PontoFormModal'
 import { IconPlus, IconSearch, IconTrash } from '../components/icons'
 
@@ -161,7 +161,7 @@ export default function Pontos() {
                   onClick={() => setMovementFor(p.id)}
                   className="mt-4 rounded-[10px] bg-navy-950 px-3 py-2 text-xs font-semibold text-white hover:bg-navy-800"
                 >
-                  Registrar Abastecimento
+                  Registrar Venda
                 </button>
               </div>
             )
@@ -170,7 +170,7 @@ export default function Pontos() {
       )}
 
       {movementFor && (
-        <MovementModal
+        <VendaModal
           pontos={pontos}
           defaultPontoId={movementFor}
           onClose={() => setMovementFor(null)}

@@ -18,7 +18,7 @@ import StatCard from '../components/dashboard/StatCard'
 import ChartCard from '../components/dashboard/ChartCard'
 import UrgencyBadge, { urgencyFromRatio } from '../components/dashboard/UrgencyBadge'
 import ProgressBar from '../components/dashboard/ProgressBar'
-import MovementModal from '../components/dashboard/MovementModal'
+import VendaModal from '../components/dashboard/VendaModal'
 import { formatCurrency, formatKg, pctChange } from '../lib/format'
 
 const TIPO_LABELS = { balada: 'Balada', mercado: 'Mercado', evento: 'Evento', bar: 'Bar' }
@@ -193,7 +193,7 @@ export default function Dashboard() {
                   onClick={() => setModalPontoId(p.id)}
                   className="shrink-0 rounded-[10px] bg-navy-950 px-3 py-2 text-xs font-semibold text-white hover:bg-navy-800"
                 >
-                  Registrar reposição
+                  Registrar Venda
                 </button>
               </div>
             )
@@ -202,7 +202,7 @@ export default function Dashboard() {
       </div>
 
       {modalPontoId && (
-        <MovementModal
+        <VendaModal
           pontos={pontos}
           defaultPontoId={modalPontoId}
           onClose={() => setModalPontoId(null)}
