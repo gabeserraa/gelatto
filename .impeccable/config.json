@@ -8,6 +8,24 @@
         "value": "inter",
         "createdAt": "2026-08-31T11:52:55.107Z",
         "reason": "DESIGN.md pins Inter as body typeface, read from client's approved Figma prototype (churn-space-56833911.figma.site) — not a fresh AI-generated choice, matching existing sanctioned design system"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "src/pages/Pontos.jsx"
+        ],
+        "createdAt": "2026-08-31T16:39:49.065Z",
+        "reason": "Falso positivo: botao de excluir troca bg E texto juntos no hover (hover:bg-red-50 hover:text-red-600), nunca fica texto cinza sobre fundo colorido simultaneamente"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "src/pages/Estoque.jsx"
+        ],
+        "createdAt": "2026-08-31T16:40:22.404Z",
+        "reason": "Falso positivo: botao de excluir troca bg E texto juntos no hover (hover:bg-red-50 hover:text-red-600), nunca fica texto cinza sobre fundo colorido simultaneamente, mesmo padrao ja aprovado em Pontos.jsx"
       }
     ]
   }

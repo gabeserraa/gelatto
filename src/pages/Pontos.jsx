@@ -1,10 +1,11 @@
 import { lazy, Suspense, useMemo, useState } from 'react'
+import { supabase } from '../lib/supabaseClient'
 import { usePontosEstoque } from '../lib/usePontosEstoque'
 import UrgencyBadge, { urgencyFromRatio } from '../components/dashboard/UrgencyBadge'
 import ProgressBar from '../components/dashboard/ProgressBar'
 import MovementModal from '../components/dashboard/MovementModal'
 import PontoFormModal from '../components/dashboard/PontoFormModal'
-import { IconPlus, IconSearch } from '../components/icons'
+import { IconPlus, IconSearch, IconTrash } from '../components/icons'
 
 const PontosMap = lazy(() => import('../components/dashboard/PontosMap'))
 import { formatKg } from '../lib/format'
@@ -31,6 +32,12 @@ export default function Pontos() {
       return true
     })
   }, [pontos, search, statusFilter, regiaoFilter])
+
+  async function handleDelete(p) {
+    if (!confirm(`Excluir "${p.nome}"? Isso também apaga todo o histórico de movimentações desse ponto. Essa ação não pode ser desfeita.`)) return
+    await supabase.from('pontos').delete().eq('id', p.id)
+    refresh()
+  }
 
   return (
     <div className="space-y-6">
@@ -113,7 +120,16 @@ export default function Pontos() {
                     <p className="truncate font-display text-sm font-semibold text-navy-950">{p.nome}</p>
                     <p className="mt-0.5 truncate text-xs text-slate-400">{p.endereco}</p>
                   </div>
-                  <UrgencyBadge status={p.status} />
+                  <div className="flex shrink-0 items-center gap-2">
+                    <UrgencyBadge status={p.status} />
+                    <button
+                      onClick={() => handleDelete(p)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600"
+                      aria-label={`Excluir ${p.nome}`}
+                    >
+                      <IconTrash className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
