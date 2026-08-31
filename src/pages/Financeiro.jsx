@@ -13,6 +13,7 @@ import {
   YAxis,
 } from 'recharts'
 import { supabase } from '../lib/supabaseClient'
+import { useTheme } from '../contexts/ThemeContext'
 import StatCard from '../components/dashboard/StatCard'
 import ChartCard from '../components/dashboard/ChartCard'
 import { formatCurrency, formatPercent, monthLabel, pctChange } from '../lib/format'
@@ -20,6 +21,9 @@ import { formatCurrency, formatPercent, monthLabel, pctChange } from '../lib/for
 const TIPO_COLORS = ['#06b6d4', '#0891b2', '#0e7490', '#155e75', '#164e63', '#0f2f3a']
 
 export default function Financeiro() {
+  const { theme } = useTheme()
+  const axisColor = theme === 'escuro' ? '#64748b' : '#94a3b8'
+  const gridColor = theme === 'escuro' ? '#1c304a' : '#e2e8f0'
   const [mensal, setMensal] = useState([])
   const [ranking, setRanking] = useState([])
   const [loading, setLoading] = useState(true)
@@ -80,9 +84,9 @@ export default function Financeiro() {
           <div className="h-72 lg:col-span-2">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={mensal.map((m) => ({ ...m, mesLabel: monthLabel(m.mes) }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                <XAxis dataKey="mesLabel" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                <XAxis dataKey="mesLabel" tick={{ fontSize: 11, fill: axisColor }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: axisColor }} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v) => formatCurrency(v)} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Bar dataKey="receita" name="Receita" fill="#06b6d4" radius={[4, 4, 0, 0]} />
@@ -109,24 +113,28 @@ export default function Financeiro() {
         </ChartCard>
       </div>
 
-      <div className="rounded-card border border-slate-200 bg-white shadow-card">
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h3 className="font-display text-sm font-semibold text-navy-950">Ranking de Lucro por Ponto</h3>
+      <div className="rounded-card border border-slate-200 bg-white shadow-card dark:border-navy-700 dark:bg-navy-900">
+        <div className="border-b border-slate-100 px-5 py-4 dark:border-navy-700">
+          <h3 className="font-display text-sm font-semibold text-navy-950 dark:text-white">Ranking de Lucro por Ponto</h3>
         </div>
-        <div className="divide-y divide-slate-100">
-          {loading && <p className="px-5 py-6 text-sm text-slate-400">Carregando...</p>}
+        <div className="divide-y divide-slate-100 dark:divide-navy-700">
+          {loading && <p className="px-5 py-6 text-sm text-slate-400 dark:text-slate-500">Carregando...</p>}
           {!loading &&
             ranking.map((r, i) => (
               <div key={r.nome} className="flex items-center justify-between px-5 py-3">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500 dark:bg-navy-800 dark:text-slate-400">
                     {i + 1}
                   </span>
-                  <span className="text-sm font-medium text-navy-950">{r.nome}</span>
+                  <span className="text-sm font-medium text-navy-950 dark:text-white">{r.nome}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold text-navy-950">{formatCurrency(r.lucro)}</span>
-                  <span className={`text-xs font-semibold ${r.variacao >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  <span className="text-sm font-semibold text-navy-950 dark:text-white">{formatCurrency(r.lucro)}</span>
+                  <span
+                    className={`text-xs font-semibold ${
+                      r.variacao >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                    }`}
+                  >
                     {r.variacao >= 0 ? '+' : ''}
                     {r.variacao.toFixed(1)}%
                   </span>

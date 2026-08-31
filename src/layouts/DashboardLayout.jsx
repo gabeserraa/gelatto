@@ -8,7 +8,7 @@ export default function DashboardLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-slate-100 dark:bg-navy-950">
       <Sidebar mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} />
       <div className="lg:pl-64">
         <Header path={pathname} onOpenMenu={() => setMobileOpen(true)} />

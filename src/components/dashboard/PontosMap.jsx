@@ -10,7 +10,7 @@ export default function PontosMap({ pontos }) {
 
   if (withCoords.length === 0) {
     return (
-      <div className="flex h-96 items-center justify-center rounded-card border border-slate-200 bg-white text-sm text-slate-400 shadow-card">
+      <div className="flex h-96 items-center justify-center rounded-card border border-slate-200 bg-white text-sm text-slate-400 shadow-card dark:border-navy-700 dark:bg-navy-900 dark:text-slate-500">
         Nenhum ponto com latitude/longitude cadastrada ainda.
       </div>
     )

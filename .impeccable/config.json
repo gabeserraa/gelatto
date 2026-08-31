@@ -35,6 +35,15 @@
         ],
         "createdAt": "2026-08-31T16:51:23.480Z",
         "reason": "Falso positivo: botao de excluir troca bg E texto juntos no hover (hover:bg-red-50 hover:text-red-600), mesmo padrao ja aprovado em Pontos.jsx e Estoque.jsx"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "src/lib/ui.js"
+        ],
+        "createdAt": "2026-08-31T19:34:39.274Z",
+        "reason": "Falso positivo: classes compartilhadas de botao editar/excluir trocam bg E texto juntos no hover, nunca ficam cinza sobre fundo colorido simultaneamente, mesmo padrao ja aprovado em outras paginas"
       }
     ]
   }

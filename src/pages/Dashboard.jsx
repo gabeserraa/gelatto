@@ -14,6 +14,7 @@ import {
 } from 'recharts'
 import { supabase } from '../lib/supabaseClient'
 import { usePontosEstoque } from '../lib/usePontosEstoque'
+import { useTheme } from '../contexts/ThemeContext'
 import StatCard from '../components/dashboard/StatCard'
 import ChartCard from '../components/dashboard/ChartCard'
 import UrgencyBadge, { urgencyFromRatio } from '../components/dashboard/UrgencyBadge'
@@ -26,6 +27,9 @@ const TIPO_COLORS = ['#06b6d4', '#0891b2', '#0e7490', '#155e75']
 
 export default function Dashboard() {
   const { pontos, loading, refresh } = usePontosEstoque()
+  const { theme } = useTheme()
+  const axisColor = theme === 'escuro' ? '#64748b' : '#94a3b8'
+  const gridColor = theme === 'escuro' ? '#1c304a' : '#e2e8f0'
   const [mensal, setMensal] = useState([])
   const [dailySeries, setDailySeries] = useState([])
   const [modalPontoId, setModalPontoId] = useState(null)
@@ -124,15 +128,15 @@ export default function Dashboard() {
                     <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                 <XAxis
                   dataKey="data"
-                  tick={{ fontSize: 11, fill: '#94a3b8' }}
+                  tick={{ fontSize: 11, fill: axisColor }}
                   tickFormatter={(v) => v.slice(8, 10) + '/' + v.slice(5, 7)}
                   axisLine={false}
                   tickLine={false}
                 />
-                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: axisColor }} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v) => formatCurrency(v)} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Area type="monotone" dataKey="receita" name="Receita" stroke="#06b6d4" fill="url(#receitaGradient)" strokeWidth={2} />
@@ -166,14 +170,14 @@ export default function Dashboard() {
         </ChartCard>
       </div>
 
-      <div className="rounded-card border border-slate-200 bg-white shadow-card">
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h3 className="font-display text-sm font-semibold text-navy-950">Pontos que Precisam de Reposição</h3>
+      <div className="rounded-card border border-slate-200 bg-white shadow-card dark:border-navy-700 dark:bg-navy-900">
+        <div className="border-b border-slate-100 px-5 py-4 dark:border-navy-700">
+          <h3 className="font-display text-sm font-semibold text-navy-950 dark:text-white">Pontos que Precisam de Reposição</h3>
         </div>
-        <div className="divide-y divide-slate-100">
-          {loading && <p className="px-5 py-6 text-sm text-slate-400">Carregando...</p>}
+        <div className="divide-y divide-slate-100 dark:divide-navy-700">
+          {loading && <p className="px-5 py-6 text-sm text-slate-400 dark:text-slate-500">Carregando...</p>}
           {!loading && reposicao.length === 0 && (
-            <p className="px-5 py-6 text-sm text-slate-400">Nenhum ponto precisa de reposição agora.</p>
+            <p className="px-5 py-6 text-sm text-slate-400 dark:text-slate-500">Nenhum ponto precisa de reposição agora.</p>
           )}
           {reposicao.map((p) => {
             const ratio = p.estoque_atual_kg / p.capacidade_kg
@@ -181,17 +185,17 @@ export default function Dashboard() {
               <div key={p.id} className="flex items-center gap-4 px-5 py-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-medium text-navy-950">{p.nome}</p>
+                    <p className="truncate text-sm font-medium text-navy-950 dark:text-white">{p.nome}</p>
                     <UrgencyBadge status={urgencyFromRatio(p.estoque_atual_kg, p.consumo_medio_dia)} />
                   </div>
-                  <p className="mt-1 text-xs text-slate-400">{formatKg(p.estoque_atual_kg)} de {formatKg(p.capacidade_kg)}</p>
+                  <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{formatKg(p.estoque_atual_kg)} de {formatKg(p.capacidade_kg)}</p>
                   <div className="mt-2 w-full max-w-xs">
                     <ProgressBar ratio={ratio} />
                   </div>
                 </div>
                 <button
                   onClick={() => setModalPontoId(p.id)}
-                  className="shrink-0 rounded-[10px] bg-navy-950 px-3 py-2 text-xs font-semibold text-white hover:bg-navy-800"
+                  className="shrink-0 rounded-[10px] bg-navy-950 px-3 py-2 text-xs font-semibold text-white hover:bg-navy-800 dark:bg-cyan-600 dark:hover:bg-cyan-500"
                 >
                   Registrar Venda
                 </button>

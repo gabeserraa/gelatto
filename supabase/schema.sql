@@ -244,3 +244,13 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function handle_new_user();
+
+-- ============================================================
+-- Realtime — os dois usuarios veem a tela atualizar sozinha quando
+-- um deles lanca uma venda/ajuste/movimentacao.
+-- ============================================================
+
+alter publication supabase_realtime add table pontos;
+alter publication supabase_realtime add table movimentacoes_estoque;
+alter publication supabase_realtime add table ajustes_estoque;
+alter publication supabase_realtime add table movimentacoes_fabrica;

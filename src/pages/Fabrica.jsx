@@ -1,9 +1,20 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import MovementModal from '../components/dashboard/MovementModal'
+import { useRealtimeRefresh } from '../lib/useRealtimeRefresh'
 import StatCard from '../components/dashboard/StatCard'
 import { IconPencil, IconTrash } from '../components/icons'
 import { formatCurrency, formatKg } from '../lib/format'
+import {
+  deleteButtonClass,
+  editButtonClass,
+  primaryButtonClass,
+  tableCardClass,
+  tableHeaderRowClass,
+  tbodyClass,
+  thClass,
+  theadClass,
+} from '../lib/ui'
 
 export default function Fabrica() {
   const [estoque, setEstoque] = useState(null)
@@ -31,10 +42,12 @@ export default function Fabrica() {
     loadMovimentacoes()
   }, [loadEstoque, loadMovimentacoes])
 
-  function handleSaved() {
+  const handleSaved = useCallback(() => {
     loadEstoque()
     loadMovimentacoes()
-  }
+  }, [loadEstoque, loadMovimentacoes])
+
+  useRealtimeRefresh(['movimentacoes_fabrica'], handleSaved)
 
   async function handleDelete(m) {
     if (!confirm(`Excluir essa movimentação de ${formatKg(m.quantidade_kg)}? Essa ação não pode ser desfeita.`)) return
@@ -74,69 +87,64 @@ export default function Fabrica() {
       <div className="flex justify-end gap-2">
         <button
           onClick={exportCsv}
-          className="rounded-[10px] border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-navy-950 hover:bg-slate-50"
+          className="rounded-[10px] border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-navy-950 hover:bg-slate-50 dark:border-navy-700 dark:bg-navy-900 dark:text-white dark:hover:bg-navy-800"
         >
           Exportar CSV
         </button>
-        <button
-          onClick={() => setShowModal(true)}
-          className="rounded-[10px] bg-navy-950 px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800"
-        >
+        <button onClick={() => setShowModal(true)} className={primaryButtonClass}>
           Registrar Movimentação
         </button>
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-slate-200 bg-white shadow-card">
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h3 className="font-display text-sm font-semibold text-navy-950">Movimentações Recentes</h3>
+      <div className={tableCardClass}>
+        <div className={tableHeaderRowClass}>
+          <h3 className="font-display text-sm font-semibold text-navy-950 dark:text-white">Movimentações Recentes</h3>
         </div>
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50/60">
+          <thead className={theadClass}>
             <tr>
               {['Data', 'Tipo', 'Quantidade', 'Valor/kg', 'Observação', ''].map((h) => (
-                <th key={h} className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                <th key={h} className={thClass}>
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className={tbodyClass}>
             {movimentacoes.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={6} className="px-4 py-6 text-center text-slate-400 dark:text-slate-500">
                   Nenhuma movimentação registrada ainda.
                 </td>
               </tr>
             )}
             {movimentacoes.map((m) => (
               <tr key={m.id}>
-                <td className="px-4 py-3 text-slate-600">{m.data}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{m.data}</td>
                 <td className="px-4 py-3">
                   <span
                     className={`rounded-full px-2.5 py-[3px] text-[11px] font-semibold ${
-                      m.tipo === 'entrada' ? 'bg-emerald-100 text-emerald-700' : 'bg-cyan-100 text-cyan-700'
+                      m.tipo === 'entrada'
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400'
+                        : 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-400'
                     }`}
                   >
                     {m.tipo === 'entrada' ? 'Entrada' : 'Saída'}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-slate-600">{formatKg(m.quantidade_kg)}</td>
-                <td className="px-4 py-3 text-slate-600">{formatCurrency(m.valor_unitario)}</td>
-                <td className="px-4 py-3 text-slate-400">{m.observacao ?? '—'}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{formatKg(m.quantidade_kg)}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{formatCurrency(m.valor_unitario)}</td>
+                <td className="px-4 py-3 text-slate-400 dark:text-slate-500">{m.observacao ?? '—'}</td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-1">
                     <button
                       onClick={() => setEditingMovimentacao(m)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-navy-950"
+                      className={editButtonClass}
                       aria-label="Editar movimentação"
                     >
                       <IconPencil className="h-4 w-4" />
                     </button>
-                    <button
-                      onClick={() => handleDelete(m)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600"
-                      aria-label="Excluir movimentação"
-                    >
+                    <button onClick={() => handleDelete(m)} className={deleteButtonClass} aria-label="Excluir movimentação">
                       <IconTrash className="h-4 w-4" />
                     </button>
                   </div>

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import DashboardLayout from './layouts/DashboardLayout'
 import Login from './pages/Login'
 
@@ -17,7 +18,7 @@ function Protected({ children }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-100 text-sm text-slate-400">
+      <div className="flex min-h-screen items-center justify-center bg-slate-100 text-sm text-slate-400 dark:bg-navy-950">
         Carregando...
       </div>
     )
@@ -37,7 +38,7 @@ function AppRoutes() {
         element={
           <Protected>
             <DashboardLayout>
-              <Suspense fallback={<p className="text-sm text-slate-400">Carregando...</p>}>
+              <Suspense fallback={<p className="text-sm text-slate-400 dark:text-slate-500">Carregando...</p>}>
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/pontos" element={<Pontos />} />
@@ -59,10 +60,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <HashRouter>
-        <AppRoutes />
-      </HashRouter>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <HashRouter>
+          <AppRoutes />
+        </HashRouter>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }

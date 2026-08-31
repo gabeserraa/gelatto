@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
+import { inputClass, labelClass, modalOverlayClass, modalShellClass, primaryButtonClass, secondaryButtonClass } from '../../lib/ui'
 
 export default function AjusteEstoqueModal({ ponto, ajuste, onClose, onSaved }) {
   const isEdit = Boolean(ajuste)
@@ -35,18 +36,18 @@ export default function AjusteEstoqueModal({ ponto, ajuste, onClose, onSaved }) 
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-navy-950/40 px-4">
-      <div className="w-full max-w-md rounded-card border border-slate-200 bg-white p-6 shadow-card">
-        <h2 className="font-display text-base font-semibold text-navy-950">
+    <div className={modalOverlayClass}>
+      <div className={modalShellClass}>
+        <h2 className="font-display text-base font-semibold text-navy-950 dark:text-white">
           {isEdit ? 'Editar Ajuste' : 'Ajustar Estoque'}
         </h2>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
           {pontoNome} — use quando vender mais rápido que o previsto e precisar tirar do estoque na hora.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Quantidade a remover (kg)</label>
+            <label className={labelClass}>Quantidade a remover (kg)</label>
             <input
               type="number"
               min="0.1"
@@ -54,47 +55,33 @@ export default function AjusteEstoqueModal({ ponto, ajuste, onClose, onSaved }) 
               required
               value={quantidade}
               onChange={(e) => setQuantidade(e.target.value)}
-              className="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm text-navy-950 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Data</label>
-            <input
-              type="date"
-              required
-              value={data}
-              onChange={(e) => setData(e.target.value)}
-              className="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm text-navy-950 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-            />
+            <label className={labelClass}>Data</label>
+            <input type="date" required value={data} onChange={(e) => setData(e.target.value)} className={inputClass} />
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Motivo (opcional)</label>
+            <label className={labelClass}>Motivo (opcional)</label>
             <input
               type="text"
               placeholder="Ex: vendeu mais rápido que o esperado"
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
-              className="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm text-navy-950 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              className={inputClass}
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-[10px] px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100"
-            >
+            <button type="button" onClick={onClose} className={secondaryButtonClass}>
               Cancelar
             </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-[10px] bg-navy-950 px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-60"
-            >
+            <button type="submit" disabled={saving} className={primaryButtonClass}>
               {saving ? 'Salvando...' : 'Salvar'}
             </button>
           </div>

@@ -3,7 +3,7 @@ export default function ProgressBar({ ratio }) {
   const color = pct <= 15 ? 'bg-red-500' : pct <= 35 ? 'bg-amber-500' : 'bg-cyan-500'
 
   return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-navy-800">
       <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
     </div>
   )

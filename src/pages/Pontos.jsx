@@ -46,19 +46,19 @@ export default function Pontos() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[220px]">
-          <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por nome ou endereço..."
-            className="w-full rounded-[10px] border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-navy-950 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+            className="w-full rounded-[10px] border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-navy-950 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 dark:border-navy-700 dark:bg-navy-900 dark:text-white dark:placeholder-slate-500"
           />
         </div>
 
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-[10px] border border-slate-200 bg-white px-3 py-2 text-sm text-navy-950"
+          className="rounded-[10px] border border-slate-200 bg-white px-3 py-2 text-sm text-navy-950 dark:border-navy-700 dark:bg-navy-900 dark:text-white"
         >
           <option value="todos">Todos os status</option>
           <option value="ativo">Ativo</option>
@@ -69,7 +69,7 @@ export default function Pontos() {
         <select
           value={regiaoFilter}
           onChange={(e) => setRegiaoFilter(e.target.value)}
-          className="rounded-[10px] border border-slate-200 bg-white px-3 py-2 text-sm text-navy-950"
+          className="rounded-[10px] border border-slate-200 bg-white px-3 py-2 text-sm text-navy-950 dark:border-navy-700 dark:bg-navy-900 dark:text-white"
         >
           <option value="todas">Todas as regiões</option>
           {regioes.map((r) => (
@@ -79,16 +79,16 @@ export default function Pontos() {
           ))}
         </select>
 
-        <div className="flex rounded-[10px] border border-slate-200 bg-white p-1">
+        <div className="flex rounded-[10px] border border-slate-200 bg-white p-1 dark:border-navy-700 dark:bg-navy-900">
           <button
             onClick={() => setView('grid')}
-            className={`rounded-[7px] px-3 py-1.5 text-xs font-semibold ${view === 'grid' ? 'bg-navy-950 text-white' : 'text-slate-500'}`}
+            className={`rounded-[7px] px-3 py-1.5 text-xs font-semibold ${view === 'grid' ? 'bg-navy-950 text-white dark:bg-cyan-600' : 'text-slate-500 dark:text-slate-400'}`}
           >
             Lista
           </button>
           <button
             onClick={() => setView('map')}
-            className={`rounded-[7px] px-3 py-1.5 text-xs font-semibold ${view === 'map' ? 'bg-navy-950 text-white' : 'text-slate-500'}`}
+            className={`rounded-[7px] px-3 py-1.5 text-xs font-semibold ${view === 'map' ? 'bg-navy-950 text-white dark:bg-cyan-600' : 'text-slate-500 dark:text-slate-400'}`}
           >
             Mapa
           </button>
@@ -96,17 +96,17 @@ export default function Pontos() {
 
         <button
           onClick={() => setShowNewPonto(true)}
-          className="flex items-center gap-1.5 rounded-[10px] bg-navy-950 px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800"
+          className="flex items-center gap-1.5 rounded-[10px] bg-navy-950 px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800 dark:bg-cyan-600 dark:hover:bg-cyan-500"
         >
           <IconPlus className="h-4 w-4" />
           Novo Ponto
         </button>
       </div>
 
-      {loading && <p className="text-sm text-slate-400">Carregando pontos...</p>}
+      {loading && <p className="text-sm text-slate-400 dark:text-slate-500">Carregando pontos...</p>}
 
       {!loading && view === 'map' && (
-        <Suspense fallback={<p className="text-sm text-slate-400">Carregando mapa...</p>}>
+        <Suspense fallback={<p className="text-sm text-slate-400 dark:text-slate-500">Carregando mapa...</p>}>
           <PontosMap pontos={filtered} />
         </Suspense>
       )}
@@ -117,24 +117,24 @@ export default function Pontos() {
             const ratio = p.estoque_atual_kg / p.capacidade_kg
             const urgency = urgencyFromRatio(p.estoque_atual_kg, p.consumo_medio_dia)
             return (
-              <div key={p.id} className="flex flex-col rounded-card border border-slate-200 bg-white p-5 shadow-card">
+              <div key={p.id} className="flex flex-col rounded-card border border-slate-200 bg-white p-5 shadow-card dark:border-navy-700 dark:bg-navy-900">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate font-display text-sm font-semibold text-navy-950">{p.nome}</p>
-                    <p className="mt-0.5 truncate text-xs text-slate-400">{p.endereco}</p>
+                    <p className="truncate font-display text-sm font-semibold text-navy-950 dark:text-white">{p.nome}</p>
+                    <p className="mt-0.5 truncate text-xs text-slate-400 dark:text-slate-500">{p.endereco}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <UrgencyBadge status={p.status} />
                     <button
                       onClick={() => setEditingPonto(p)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-navy-950"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-navy-950 dark:text-slate-500 dark:hover:bg-navy-800 dark:hover:text-white"
                       aria-label={`Editar ${p.nome}`}
                     >
                       <IconPencil className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(p)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600 dark:text-slate-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                       aria-label={`Excluir ${p.nome}`}
                     >
                       <IconTrash className="h-4 w-4" />
@@ -142,7 +142,7 @@ export default function Pontos() {
                   </div>
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
                   <span>{TIPO_LABELS[p.tipo] ?? p.tipo}</span>
                   <span>{p.regiao}</span>
                   <span>Consumo médio: {formatKg(p.consumo_medio_dia)}/dia</span>
@@ -150,8 +150,8 @@ export default function Pontos() {
 
                 <div className="mt-4">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-medium text-navy-950">{formatKg(p.estoque_atual_kg)}</span>
-                    <span className="text-slate-400">de {formatKg(p.capacidade_kg)}</span>
+                    <span className="font-medium text-navy-950 dark:text-white">{formatKg(p.estoque_atual_kg)}</span>
+                    <span className="text-slate-400 dark:text-slate-500">de {formatKg(p.capacidade_kg)}</span>
                   </div>
                   <div className="mt-1.5">
                     <ProgressBar ratio={ratio} />
@@ -160,7 +160,7 @@ export default function Pontos() {
 
                 <div className="mt-3 flex items-center justify-between text-xs">
                   <UrgencyBadge status={urgency} />
-                  <span className="text-slate-400">
+                  <span className="text-slate-400 dark:text-slate-500">
                     {p.previsao_esgotamento_dias != null
                       ? `esgota em ~${p.previsao_esgotamento_dias}d`
                       : 'sem previsão'}
@@ -170,13 +170,13 @@ export default function Pontos() {
                 <div className="mt-4 flex gap-2">
                   <button
                     onClick={() => setMovementFor(p.id)}
-                    className="flex-1 rounded-[10px] bg-navy-950 px-3 py-2 text-xs font-semibold text-white hover:bg-navy-800"
+                    className="flex-1 rounded-[10px] bg-navy-950 px-3 py-2 text-xs font-semibold text-white hover:bg-navy-800 dark:bg-cyan-600 dark:hover:bg-cyan-500"
                   >
                     Registrar Venda
                   </button>
                   <button
                     onClick={() => setAdjustingPonto(p)}
-                    className="flex items-center justify-center gap-1.5 rounded-[10px] border border-slate-200 px-3 py-2 text-xs font-semibold text-navy-950 hover:bg-slate-50"
+                    className="flex items-center justify-center gap-1.5 rounded-[10px] border border-slate-200 px-3 py-2 text-xs font-semibold text-navy-950 hover:bg-slate-50 dark:border-navy-700 dark:text-white dark:hover:bg-navy-800"
                     aria-label={`Ajustar estoque de ${p.nome}`}
                   >
                     <IconMinusCircle className="h-4 w-4" />

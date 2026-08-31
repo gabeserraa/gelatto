@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
+import { inputClass, primaryButtonClass } from '../lib/ui'
 
 const TABS = ['Perfil', 'Empresa', 'Usuários', 'Preferências', 'Integrações']
 
@@ -15,7 +17,9 @@ export default function Configuracoes() {
             key={t}
             onClick={() => setTab(t)}
             className={`whitespace-nowrap rounded-[10px] px-3 py-2 text-left text-sm font-medium ${
-              tab === t ? 'bg-navy-950 text-white' : 'text-slate-500 hover:bg-slate-100'
+              tab === t
+                ? 'bg-navy-950 text-white dark:bg-cyan-600'
+                : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-navy-800'
             }`}
           >
             {t}
@@ -23,7 +27,7 @@ export default function Configuracoes() {
         ))}
       </nav>
 
-      <div className="flex-1 rounded-card border border-slate-200 bg-white p-6 shadow-card">
+      <div className="flex-1 rounded-card border border-slate-200 bg-white p-6 shadow-card dark:border-navy-700 dark:bg-navy-900">
         {tab === 'Perfil' && <PerfilTab />}
         {tab === 'Empresa' && <EmpresaTab />}
         {tab === 'Usuários' && <UsuariosTab />}
@@ -37,22 +41,15 @@ export default function Configuracoes() {
 function Field({ label, children }) {
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-slate-500">{label}</label>
+      <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">{label}</label>
       {children}
     </div>
   )
 }
 
-const inputClass =
-  'w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm text-navy-950 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500'
-
 function SaveButton({ saving, saved }) {
   return (
-    <button
-      type="submit"
-      disabled={saving}
-      className="rounded-[10px] bg-navy-950 px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800 disabled:opacity-60"
-    >
+    <button type="submit" disabled={saving} className={primaryButtonClass}>
       {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar'}
     </button>
   )
@@ -77,18 +74,22 @@ function PerfilTab() {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-sm space-y-4">
-      <h2 className="font-display text-sm font-semibold text-navy-950">Perfil</h2>
+      <h2 className="font-display text-sm font-semibold text-navy-950 dark:text-white">Perfil</h2>
       <Field label="Nome completo">
         <input value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputClass} />
       </Field>
       <Field label="E-mail">
-        <input value={user?.email ?? ''} disabled className={`${inputClass} bg-slate-50 text-slate-400`} />
+        <input
+          value={user?.email ?? ''}
+          disabled
+          className={`${inputClass} bg-slate-50 text-slate-400 dark:bg-navy-950 dark:text-slate-500`}
+        />
       </Field>
       <Field label="Nível de permissão">
         <input
           value={profile?.role === 'admin' ? 'Administrador' : 'Operador'}
           disabled
-          className={`${inputClass} bg-slate-50 text-slate-400`}
+          className={`${inputClass} bg-slate-50 text-slate-400 dark:bg-navy-950 dark:text-slate-500`}
         />
       </Field>
       <SaveButton saving={saving} saved={saved} />
@@ -117,11 +118,11 @@ function EmpresaTab() {
     setTimeout(() => setSaved(false), 2000)
   }
 
-  if (!form) return <p className="text-sm text-slate-400">Carregando...</p>
+  if (!form) return <p className="text-sm text-slate-400 dark:text-slate-500">Carregando...</p>
 
   return (
     <form onSubmit={handleSubmit} className="max-w-sm space-y-4">
-      <h2 className="font-display text-sm font-semibold text-navy-950">Empresa</h2>
+      <h2 className="font-display text-sm font-semibold text-navy-950 dark:text-white">Empresa</h2>
       <Field label="Nome da empresa">
         <input
           value={form.empresa_nome}
@@ -163,34 +164,39 @@ function UsuariosTab() {
 
   return (
     <div>
-      <h2 className="font-display text-sm font-semibold text-navy-950">Usuários</h2>
-      <div className="mt-4 divide-y divide-slate-100 rounded-[10px] border border-slate-200">
+      <h2 className="font-display text-sm font-semibold text-navy-950 dark:text-white">Usuários</h2>
+      <div className="mt-4 divide-y divide-slate-100 rounded-[10px] border border-slate-200 dark:divide-navy-700 dark:border-navy-700">
         {users.map((u) => (
           <div key={u.id} className="flex items-center justify-between px-4 py-3">
-            <span className="text-sm font-medium text-navy-950">{u.full_name}</span>
+            <span className="text-sm font-medium text-navy-950 dark:text-white">{u.full_name}</span>
             {isAdmin ? (
               <select
                 value={u.role}
                 onChange={(e) => changeRole(u.id, e.target.value)}
-                className="rounded-[10px] border border-slate-200 px-2 py-1.5 text-xs text-navy-950"
+                className="rounded-[10px] border border-slate-200 px-2 py-1.5 text-xs text-navy-950 dark:border-navy-700 dark:bg-navy-900 dark:text-white"
               >
                 <option value="admin">Administrador</option>
                 <option value="operador">Operador</option>
               </select>
             ) : (
-              <span className="text-xs text-slate-400">{u.role === 'admin' ? 'Administrador' : 'Operador'}</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                {u.role === 'admin' ? 'Administrador' : 'Operador'}
+              </span>
             )}
           </div>
         ))}
       </div>
       {!isAdmin && (
-        <p className="mt-3 text-xs text-slate-400">Apenas administradores podem alterar níveis de permissão.</p>
+        <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
+          Apenas administradores podem alterar níveis de permissão.
+        </p>
       )}
     </div>
   )
 }
 
 function PreferenciasTab() {
+  const { theme, setTheme } = useTheme()
   const [form, setForm] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -207,7 +213,6 @@ function PreferenciasTab() {
       .update({
         moeda: form.moeda,
         fuso_horario: form.fuso_horario,
-        tema: form.tema,
         notificacoes_email: form.notificacoes_email,
       })
       .eq('id', true)
@@ -216,11 +221,11 @@ function PreferenciasTab() {
     setTimeout(() => setSaved(false), 2000)
   }
 
-  if (!form) return <p className="text-sm text-slate-400">Carregando...</p>
+  if (!form) return <p className="text-sm text-slate-400 dark:text-slate-500">Carregando...</p>
 
   return (
     <form onSubmit={handleSubmit} className="max-w-sm space-y-4">
-      <h2 className="font-display text-sm font-semibold text-navy-950">Preferências</h2>
+      <h2 className="font-display text-sm font-semibold text-navy-950 dark:text-white">Preferências</h2>
       <Field label="Moeda">
         <select
           value={form.moeda}
@@ -242,16 +247,15 @@ function PreferenciasTab() {
         </select>
       </Field>
       <Field label="Modo de exibição">
-        <select
-          value={form.tema}
-          onChange={(e) => setForm((f) => ({ ...f, tema: e.target.value }))}
-          className={inputClass}
-        >
+        <select value={theme} onChange={(e) => setTheme(e.target.value)} className={inputClass}>
           <option value="claro">Claro</option>
           <option value="escuro">Escuro</option>
         </select>
+        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+          Aplica na hora, só neste dispositivo — não precisa salvar.
+        </p>
       </Field>
-      <label className="flex items-center gap-2 text-sm text-slate-600">
+      <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
         <input
           type="checkbox"
           checked={form.notificacoes_email}
@@ -267,17 +271,17 @@ function PreferenciasTab() {
 function IntegracoesTab() {
   return (
     <div>
-      <h2 className="font-display text-sm font-semibold text-navy-950">Integrações</h2>
-      <div className="mt-4 flex items-center justify-between rounded-[10px] border border-slate-200 px-4 py-3">
+      <h2 className="font-display text-sm font-semibold text-navy-950 dark:text-white">Integrações</h2>
+      <div className="mt-4 flex items-center justify-between rounded-[10px] border border-slate-200 px-4 py-3 dark:border-navy-700">
         <div>
-          <p className="text-sm font-medium text-navy-950">Supabase</p>
-          <p className="text-xs text-slate-400">Banco de dados e autenticação em nuvem — conectado.</p>
+          <p className="text-sm font-medium text-navy-950 dark:text-white">Supabase</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500">Banco de dados e autenticação em nuvem — conectado.</p>
         </div>
-        <span className="rounded-full bg-emerald-100 px-2.5 py-[3px] text-[11px] font-semibold text-emerald-700">
+        <span className="rounded-full bg-emerald-100 px-2.5 py-[3px] text-[11px] font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400">
           Ativo
         </span>
       </div>
-      <p className="mt-4 text-xs text-slate-400">
+      <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
         Novas integrações (WhatsApp, e-mail transacional, etc.) podem ser adicionadas aqui no futuro.
       </p>
     </div>
