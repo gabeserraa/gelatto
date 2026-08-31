@@ -14,17 +14,19 @@
 
 truncate table movimentacoes_estoque;
 
+-- As views precisam sumir antes de mexer nas colunas, senao o Postgres
+-- recusa o DROP COLUMN por causa da dependencia.
+drop view if exists v_lucro_por_ponto;
+drop view if exists v_financeiro_mensal;
+drop view if exists v_movimentacoes_margem;
+drop view if exists v_pontos_estoque;
+
 alter table movimentacoes_estoque drop constraint if exists movimentacoes_estoque_tipo_check;
 alter table movimentacoes_estoque drop column if exists tipo;
 alter table movimentacoes_estoque rename column valor_unitario to preco_venda_kg;
 alter table movimentacoes_estoque add column if not exists custo_kg numeric not null default 0;
 alter table movimentacoes_estoque alter column custo_kg drop default;
 alter table movimentacoes_estoque add constraint movimentacoes_estoque_custo_kg_check check (custo_kg >= 0);
-
-drop view if exists v_lucro_por_ponto;
-drop view if exists v_financeiro_mensal;
-drop view if exists v_movimentacoes_margem;
-drop view if exists v_pontos_estoque;
 
 -- Estoque atual do freezer: soma, entre todas as vendas do ponto, o que
 -- sobra de cada entrega apos o consumo medio estimado desde a data dela.
