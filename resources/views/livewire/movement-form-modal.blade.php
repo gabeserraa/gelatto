@@ -6,6 +6,17 @@
 
                 <form wire:submit="save" class="mt-4 space-y-4">
                     <div>
+                        <label class="block text-sm font-medium text-slate-700">Ponto</label>
+                        <select wire:model="pointId" class="mt-1 w-full rounded-[10px] border-slate-300 text-sm focus:border-cyan-500 focus:ring-cyan-500">
+                            <option value="">Selecione um ponto</option>
+                            @foreach ($this->points as $option)
+                                <option value="{{ $option->id }}">{{ $option->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('pointId') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-medium text-slate-700">Tipo</label>
                         <select wire:model.live="type" class="mt-1 w-full rounded-[10px] border-slate-300 text-sm focus:border-cyan-500 focus:ring-cyan-500">
                             <option value="reposicao">Reposição</option>

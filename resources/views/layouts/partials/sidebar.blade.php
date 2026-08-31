@@ -13,7 +13,7 @@
         @foreach (collect(config('dashboards.items'))->sortBy('order') as $item)
             <a
                 href="{{ route($item['route']) }}"
-                class="flex items-center gap-3 rounded-[9px] px-3 py-2 text-[13px] font-medium transition-colors {{ request()->routeIs($item['route']) ? 'bg-cyan-500/[0.13] font-semibold text-cyan-400' : 'text-slate-400 hover:bg-white/5 hover:text-slate-100' }}"
+                class="flex items-center gap-3 rounded-[9px] border-l-2 px-3 py-2 text-[13px] font-medium transition-colors {{ request()->routeIs($item['route']) ? 'border-cyan-400 bg-cyan-500/[0.13] font-semibold text-cyan-400' : 'border-transparent text-slate-400 hover:bg-white/5 hover:text-slate-100' }}"
             >
                 <x-dashboard.icon :name="$item['icon']" class="h-[18px] w-[18px] shrink-0" />
                 {{ $item['name'] }}

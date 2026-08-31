@@ -16,12 +16,12 @@
     </head>
     <body class="font-sans text-navy-950 antialiased">
         <div class="flex min-h-screen flex-col items-center justify-center bg-slate-100 px-6">
-            <div class="flex items-center gap-2.5">
+            <a href="{{ url('/') }}" class="flex items-center gap-2.5">
                 <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-navy-950">
                     <x-dashboard.icon name="droplet" class="h-5 w-5 text-cyan-400" />
                 </span>
                 <span class="font-display text-lg font-bold text-navy-950">Gelatto ICE CO.</span>
-            </div>
+            </a>
 
             <div class="mt-6 w-full overflow-hidden rounded-card border border-slate-200 bg-white px-6 py-6 shadow-card sm:max-w-md">
                 {{ $slot }}

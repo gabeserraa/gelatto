@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Point;
 use App\Models\PointMovement;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -22,6 +23,7 @@ class MovementFormModal extends Component
     protected function rules(): array
     {
         return [
+            'pointId' => 'required|exists:points,id',
             'type' => 'required|in:reposicao,retirada,ajuste',
             'quantity_kg' => 'required|numeric|min:0.01',
             'adjustment_direction' => 'required_if:type,ajuste|nullable|in:increase,decrease',
@@ -33,7 +35,7 @@ class MovementFormModal extends Component
     }
 
     #[On('open-movement-form')]
-    public function open(int $pointId): void
+    public function open(?int $pointId = null): void
     {
         $this->pointId = $pointId;
         $this->type = 'retirada';
@@ -47,9 +49,15 @@ class MovementFormModal extends Component
         $this->showModal = true;
     }
 
+    public function getPointsProperty()
+    {
+        return Point::orderBy('name')->get(['id', 'name']);
+    }
+
     public function save(): void
     {
         $data = $this->validate();
+        unset($data['pointId']);
         $data['point_id'] = $this->pointId;
 
         $data['cost'] = $this->cost_per_kg !== null

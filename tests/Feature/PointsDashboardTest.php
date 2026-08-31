@@ -32,6 +32,36 @@ class PointsDashboardTest extends TestCase
         $response->assertSee('Balada Teste');
     }
 
+    public function test_orders_points_by_most_recent_movement_first(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $stale = Point::factory()->create(['name' => 'Ponto Antigo Alfa']);
+        PointMovement::factory()->create([
+            'point_id' => $stale->id, 'type' => 'reposicao', 'occurred_at' => now()->subMonths(3),
+        ]);
+
+        $fresh = Point::factory()->create(['name' => 'Ponto Recente Zulu']);
+        PointMovement::factory()->create([
+            'point_id' => $fresh->id, 'type' => 'retirada', 'occurred_at' => now(),
+        ]);
+
+        $noHistory = Point::factory()->create(['name' => 'Ponto Sem Historico']);
+
+        $response = $this->get(route('dashboards.points.index'));
+
+        $content = $response->getContent();
+        $freshPos = strpos($content, 'Ponto Recente Zulu');
+        $stalePos = strpos($content, 'Ponto Antigo Alfa');
+        $noHistoryPos = strpos($content, 'Ponto Sem Historico');
+
+        $this->assertNotFalse($freshPos);
+        $this->assertNotFalse($stalePos);
+        $this->assertNotFalse($noHistoryPos);
+        $this->assertTrue($freshPos < $stalePos, 'Ponto com movimentação mais recente deve vir primeiro');
+        $this->assertTrue($stalePos < $noHistoryPos, 'Ponto sem histórico deve vir por último');
+    }
+
     public function test_filters_by_status(): void
     {
         $this->actingAs(User::factory()->create());

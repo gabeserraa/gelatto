@@ -75,9 +75,10 @@ class InventoryDashboardController extends Controller
         $periodEnd = $periodStart->copy()->endOfMonth();
 
         $points = Point::with('movements')
+            ->withMax('movements', 'occurred_at')
             ->when($status, fn ($query) => $query->where('status', $status))
             ->when($region, fn ($query) => $query->where('region', $region))
-            ->orderBy('name')
+            ->orderByDesc('movements_max_occurred_at')
             ->get();
 
         $rows = $points->map(function (Point $point) use ($stockService, $periodStart, $periodEnd) {

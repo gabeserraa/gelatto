@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
 
-        $this->call(PointSeeder::class);
+        // PointSeeder desativado: sistema em uso com dados reais desde 2026-08-31.
+        // Reative só em ambiente de desenvolvimento/teste, nunca em produção.
+        // $this->call(PointSeeder::class);
     }
 }

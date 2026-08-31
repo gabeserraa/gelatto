@@ -34,12 +34,40 @@ class InventoryDashboardTest extends TestCase
         $response->assertSee('Giro médio');
     }
 
+    public function test_orders_points_by_most_recent_movement_first(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $stale = Point::factory()->create(['name' => 'Ponto Antigo Alfa']);
+        PointMovement::factory()->create([
+            'point_id' => $stale->id, 'type' => 'reposicao', 'occurred_at' => now()->subMonths(3),
+        ]);
+
+        $fresh = Point::factory()->create(['name' => 'Ponto Recente Zulu']);
+        PointMovement::factory()->create([
+            'point_id' => $fresh->id, 'type' => 'retirada', 'occurred_at' => now(),
+        ]);
+
+        $response = $this->get(route('dashboards.inventory.index'));
+
+        $content = $response->getContent();
+        $freshPos = strpos($content, 'Ponto Recente Zulu');
+        $stalePos = strpos($content, 'Ponto Antigo Alfa');
+
+        $this->assertNotFalse($freshPos);
+        $this->assertNotFalse($stalePos);
+        $this->assertTrue($freshPos < $stalePos, 'Ponto com movimentação mais recente deve vir primeiro');
+    }
+
     public function test_filters_by_region(): void
     {
         $this->actingAs(User::factory()->create());
 
         Point::factory()->create(['name' => 'Ponto Centro', 'region' => 'Centro']);
-        Point::factory()->create(['name' => 'Ponto Sul', 'region' => 'Zona Sul']);
+        $sul = Point::factory()->create(['name' => 'Ponto Sul', 'region' => 'Zona Sul', 'capacity_kg' => 100]);
+        // Estoque saudável para não aparecer no sino de alertas globais do header
+        // (que lista pontos críticos em qualquer página, sem respeitar o filtro de região).
+        PointMovement::factory()->create(['point_id' => $sul->id, 'type' => 'reposicao', 'quantity_kg' => 90]);
 
         $response = $this->get(route('dashboards.inventory.index', ['region' => 'Centro']));
 

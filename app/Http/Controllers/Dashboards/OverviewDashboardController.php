@@ -32,7 +32,7 @@ class OverviewDashboardController extends Controller
             ? round(($current['profit'] / $current['revenue']) * 100, 1)
             : 0.0;
 
-        $restockList = Point::with('movements')
+        $restockAll = Point::with('movements')
             ->where('status', 'ativo')
             ->get()
             ->map(fn (Point $point) => [
@@ -40,11 +40,14 @@ class OverviewDashboardController extends Controller
                 'urgency' => $stockService->restockUrgency($point),
                 'daysUntilStockout' => $stockService->daysUntilStockout($point),
                 'currentStock' => $stockService->currentStock($point),
+                'stockPercentage' => $stockService->stockPercentage($point),
             ])
             ->filter(fn (array $row) => $row['urgency'] !== 'ok')
             ->sortBy('daysUntilStockout')
-            ->take(5)
             ->values();
+
+        $restockTotal = $restockAll->count();
+        $restockList = $restockAll->take(5)->values();
 
         return view('dashboards.overview.index', [
             'comparison' => $comparison,
@@ -57,6 +60,7 @@ class OverviewDashboardController extends Controller
             'regionsCovered' => $regionsCovered,
             'ice' => $ice,
             'restockList' => $restockList,
+            'restockTotal' => $restockTotal,
         ]);
     }
 }
