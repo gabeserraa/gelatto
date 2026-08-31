@@ -14,6 +14,7 @@ class PointFormModal extends Component
     public string $name = '';
     public string $type = 'Balada';
     public ?string $address = null;
+    public ?string $region = null;
     public ?float $latitude = null;
     public ?float $longitude = null;
     public ?string $contact_name = null;
@@ -27,8 +28,9 @@ class PointFormModal extends Component
     {
         return [
             'name' => 'required|string|max:255',
-            'type' => 'required|string|max:100',
+            'type' => 'required|string|in:'.implode(',', config('dashboards.point_types')),
             'address' => 'nullable|string|max:255',
+            'region' => 'nullable|string|max:100',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'contact_name' => 'nullable|string|max:255',
@@ -44,7 +46,7 @@ class PointFormModal extends Component
     public function open(?int $pointId = null): void
     {
         $this->reset([
-            'name', 'type', 'address', 'latitude', 'longitude',
+            'name', 'type', 'address', 'region', 'latitude', 'longitude',
             'contact_name', 'contact_phone', 'capacity_kg',
             'initial_estimate_kg', 'status', 'notes',
         ]);
@@ -59,6 +61,7 @@ class PointFormModal extends Component
             $this->name = $point->name;
             $this->type = $point->type;
             $this->address = $point->address;
+            $this->region = $point->region;
             $this->latitude = $point->latitude !== null ? (float) $point->latitude : null;
             $this->longitude = $point->longitude !== null ? (float) $point->longitude : null;
             $this->contact_name = $point->contact_name;

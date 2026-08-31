@@ -141,4 +141,87 @@ class PointStockServiceTest extends TestCase
         $this->assertSame(40.0, $summary['cost']);
         $this->assertSame(40.0, $summary['profit']);
     }
+
+    public function test_daily_average_withdrawal_is_monthly_average_divided_by_thirty(): void
+    {
+        $point = Point::factory()->create();
+
+        PointMovement::factory()->create([
+            'point_id' => $point->id, 'type' => 'retirada', 'quantity_kg' => 60, 'occurred_at' => now()->subDays(5),
+        ]);
+
+        $point->load('movements');
+
+        $this->assertSame(2.0, $this->service->dailyAverageWithdrawal($point));
+    }
+
+    public function test_days_until_stockout_divides_current_stock_by_daily_average(): void
+    {
+        $point = Point::factory()->create();
+
+        PointMovement::factory()->create(['point_id' => $point->id, 'type' => 'reposicao', 'quantity_kg' => 320]);
+        PointMovement::factory()->create([
+            'point_id' => $point->id, 'type' => 'retirada', 'quantity_kg' => 300, 'occurred_at' => now(),
+        ]);
+
+        $point->load('movements');
+
+        // currentStock = 20kg, dailyAverage = 300/30 = 10kg/dia -> 2 dias
+        $this->assertSame(2.0, $this->service->daysUntilStockout($point));
+    }
+
+    public function test_days_until_stockout_is_null_when_no_consumption_history(): void
+    {
+        $point = Point::factory()->create(['initial_estimate_kg' => null]);
+        PointMovement::factory()->create(['point_id' => $point->id, 'type' => 'reposicao', 'quantity_kg' => 40]);
+
+        $point->load('movements');
+
+        $this->assertNull($this->service->daysUntilStockout($point));
+    }
+
+    public function test_restock_urgency_is_critico_below_critical_days_threshold(): void
+    {
+        $point = Point::factory()->create();
+
+        PointMovement::factory()->create(['point_id' => $point->id, 'type' => 'reposicao', 'quantity_kg' => 305]);
+        PointMovement::factory()->create([
+            'point_id' => $point->id, 'type' => 'retirada', 'quantity_kg' => 300, 'occurred_at' => now(),
+        ]);
+
+        $point->load('movements');
+
+        // currentStock = 5kg, dailyAverage = 10kg/dia -> 0.5 dias (< limiar critico de 1 dia)
+        $this->assertSame('critico', $this->service->restockUrgency($point));
+    }
+
+    public function test_restock_urgency_is_repor_em_breve_below_low_stock_days_threshold(): void
+    {
+        $point = Point::factory()->create();
+
+        PointMovement::factory()->create(['point_id' => $point->id, 'type' => 'reposicao', 'quantity_kg' => 325]);
+        PointMovement::factory()->create([
+            'point_id' => $point->id, 'type' => 'retirada', 'quantity_kg' => 300, 'occurred_at' => now(),
+        ]);
+
+        $point->load('movements');
+
+        // currentStock = 25kg, dailyAverage = 10kg/dia -> 2.5 dias (entre 1 e 3)
+        $this->assertSame('repor_em_breve', $this->service->restockUrgency($point));
+    }
+
+    public function test_restock_urgency_is_ok_when_plenty_of_days_remain(): void
+    {
+        $point = Point::factory()->create();
+
+        PointMovement::factory()->create(['point_id' => $point->id, 'type' => 'reposicao', 'quantity_kg' => 340]);
+        PointMovement::factory()->create([
+            'point_id' => $point->id, 'type' => 'retirada', 'quantity_kg' => 300, 'occurred_at' => now(),
+        ]);
+
+        $point->load('movements');
+
+        // currentStock = 40kg, dailyAverage = 10kg/dia -> 4 dias (>= limiar baixo de 3 dias)
+        $this->assertSame('ok', $this->service->restockUrgency($point));
+    }
 }

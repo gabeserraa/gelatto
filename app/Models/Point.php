@@ -14,6 +14,7 @@ class Point extends Model
         'name',
         'type',
         'address',
+        'region',
         'latitude',
         'longitude',
         'contact_name',

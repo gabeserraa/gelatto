@@ -15,8 +15,9 @@ class PointFactory extends Factory
 
         return [
             'name' => $this->faker->company(),
-            'type' => $this->faker->randomElement(['Balada', 'Casa de eventos', 'Mercado', 'Outro']),
+            'type' => $this->faker->randomElement(config('dashboards.point_types')),
             'address' => $this->faker->address(),
+            'region' => $this->faker->randomElement(['Centro', 'Zona Sul', 'Zona Norte', 'Zona Leste', 'Zona Oeste']),
             'latitude' => $this->faker->latitude(-27.5, -26.8),
             'longitude' => $this->faker->longitude(-49.1, -48.5),
             'contact_name' => $this->faker->name(),

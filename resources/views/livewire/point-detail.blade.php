@@ -25,7 +25,7 @@
                     </button>
                     <button
                         wire:click="$dispatch('open-movement-form', { pointId: {{ $point->id }} })"
-                        class="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
+                        class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
                     >
                         Lançar movimentação
                     </button>

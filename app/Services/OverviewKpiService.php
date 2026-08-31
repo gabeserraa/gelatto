@@ -55,6 +55,74 @@ class OverviewKpiService
         return $series;
     }
 
+    public function movementTypeBreakdown(Carbon $start, Carbon $end): array
+    {
+        $totals = ['reposicao' => 0.0, 'retirada' => 0.0, 'ajuste' => 0.0];
+
+        foreach ($this->points() as $point) {
+            foreach ($point->movements as $movement) {
+                if (! $movement->occurred_at->between($start, $end)) {
+                    continue;
+                }
+
+                $totals[$movement->type] += (float) $movement->quantity_kg;
+            }
+        }
+
+        return $totals;
+    }
+
+    public function stockByPoint(): array
+    {
+        $breakdown = [];
+
+        foreach ($this->points() as $point) {
+            $breakdown[$point->name] = $this->stockService->currentStock($point);
+        }
+
+        return $breakdown;
+    }
+
+    public function iceDistributed(Carbon $start, Carbon $end): array
+    {
+        $kg = 0.0;
+
+        foreach ($this->points() as $point) {
+            foreach ($point->movements as $movement) {
+                if ($movement->type === 'retirada' && $movement->occurred_at->between($start, $end)) {
+                    $kg += (float) $movement->quantity_kg;
+                }
+            }
+        }
+
+        return ['kg' => $kg, 'tons' => round($kg / 1000, 2)];
+    }
+
+    public function consumptionByPointType(Carbon $start, Carbon $end): array
+    {
+        $breakdown = [];
+
+        foreach ($this->points() as $point) {
+            foreach ($point->movements as $movement) {
+                if ($movement->type === 'retirada' && $movement->occurred_at->between($start, $end)) {
+                    $breakdown[$point->type] = ($breakdown[$point->type] ?? 0.0) + (float) $movement->quantity_kg;
+                }
+            }
+        }
+
+        return $breakdown;
+    }
+
+    public function regionsCovered(): int
+    {
+        return $this->points()
+            ->where('status', 'ativo')
+            ->pluck('region')
+            ->filter()
+            ->unique()
+            ->count();
+    }
+
     public function ranking(Carbon $start, Carbon $end, int $limit = 5): array
     {
         $points = $this->points();

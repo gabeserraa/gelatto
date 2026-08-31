@@ -60,7 +60,7 @@
                         <button type="button" wire:click="$set('showModal', false)" class="rounded-md border px-4 py-2 text-sm text-gray-700">
                             Cancelar
                         </button>
-                        <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700">
+                        <button type="submit" class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">
                             Registrar
                         </button>
                     </div>

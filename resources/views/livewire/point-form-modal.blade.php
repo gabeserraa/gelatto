@@ -15,13 +15,24 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Tipo</label>
-                        <input type="text" wire:model="type" class="mt-1 w-full rounded-md border-gray-300" placeholder="Balada, casa de eventos, mercado...">
+                        <select wire:model="type" class="mt-1 w-full rounded-md border-gray-300">
+                            @foreach (config('dashboards.point_types') as $pointType)
+                                <option value="{{ $pointType }}">{{ $pointType }}</option>
+                            @endforeach
+                        </select>
                         @error('type') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Endereço</label>
-                        <input type="text" wire:model="address" class="mt-1 w-full rounded-md border-gray-300">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Endereço</label>
+                            <input type="text" wire:model="address" class="mt-1 w-full rounded-md border-gray-300">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Região</label>
+                            <input type="text" wire:model="region" class="mt-1 w-full rounded-md border-gray-300" placeholder="Centro, Zona Sul...">
+                            @error('region') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
@@ -79,7 +90,7 @@
                         <button type="button" wire:click="$set('showModal', false)" class="rounded-md border px-4 py-2 text-sm text-gray-700">
                             Cancelar
                         </button>
-                        <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700">
+                        <button type="submit" class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">
                             Salvar
                         </button>
                     </div>

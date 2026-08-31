@@ -45,6 +45,41 @@ class PointStockService
         return round($withdrawals->sum(fn ($movement) => (float) $movement->quantity_kg) / $monthsWithData, 2);
     }
 
+    public function dailyAverageWithdrawal(Point $point, ?int $months = null): float
+    {
+        return round($this->monthlyAverageWithdrawal($point, $months) / 30, 2);
+    }
+
+    public function daysUntilStockout(Point $point): ?float
+    {
+        $daily = $this->dailyAverageWithdrawal($point);
+
+        if ($daily <= 0) {
+            return null;
+        }
+
+        return round($this->currentStock($point) / $daily, 1);
+    }
+
+    public function restockUrgency(Point $point): string
+    {
+        $days = $this->daysUntilStockout($point);
+
+        if ($days === null) {
+            return 'ok';
+        }
+
+        if ($days < (float) config('dashboards.critical_stockout_days', 1)) {
+            return 'critico';
+        }
+
+        if ($days < (float) config('dashboards.low_stock_stockout_days', 3)) {
+            return 'repor_em_breve';
+        }
+
+        return 'ok';
+    }
+
     public function needsRestockSoon(Point $point): bool
     {
         $threshold = (float) config('dashboards.low_stock_threshold_percent', 20);

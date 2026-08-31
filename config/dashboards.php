@@ -3,6 +3,10 @@
 return [
     'stock_window_months' => env('DASHBOARD_STOCK_WINDOW_MONTHS', 3),
     'low_stock_threshold_percent' => env('DASHBOARD_LOW_STOCK_THRESHOLD_PERCENT', 20),
+    'critical_stockout_days' => env('DASHBOARD_CRITICAL_STOCKOUT_DAYS', 1),
+    'low_stock_stockout_days' => env('DASHBOARD_LOW_STOCK_STOCKOUT_DAYS', 3),
+
+    'point_types' => ['Balada', 'Mercado', 'Evento', 'Bar', 'Restaurante', 'Outro'],
 
     'items' => [
         [

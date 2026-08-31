@@ -15,12 +15,14 @@ class PointsDashboardController extends Controller
         $month = (int) $request->input('month', now()->month);
         $year = (int) $request->input('year', now()->year);
         $status = $request->input('status');
+        $region = $request->input('region');
 
         $periodStart = Carbon::create($year, $month, 1)->startOfMonth();
         $periodEnd = $periodStart->copy()->endOfMonth();
 
         $points = Point::with('movements')
             ->when($status, fn ($query) => $query->where('status', $status))
+            ->when($region, fn ($query) => $query->where('region', $region))
             ->orderBy('name')
             ->get();
 
@@ -32,17 +34,22 @@ class PointsDashboardController extends Controller
                 'currentStock' => $stockService->currentStock($point),
                 'stockPercentage' => $stockService->stockPercentage($point),
                 'monthlyAverage' => $stockService->monthlyAverageWithdrawal($point),
+                'daysUntilStockout' => $stockService->daysUntilStockout($point),
                 'profit' => $financials['profit'],
-                'needsRestockSoon' => $stockService->needsRestockSoon($point),
+                'urgency' => $stockService->restockUrgency($point),
             ];
         });
 
         $summary = $stockService->summary($points, $periodStart, $periodEnd);
 
+        $regions = Point::query()->whereNotNull('region')->distinct()->orderBy('region')->pluck('region');
+
         return view('dashboards.points.index', [
             'rows' => $rows,
             'summary' => $summary,
             'status' => $status,
+            'region' => $region,
+            'regions' => $regions,
             'month' => $month,
             'year' => $year,
         ]);

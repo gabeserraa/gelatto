@@ -20,6 +20,15 @@
             </select>
         </div>
         <div>
+            <label class="block text-sm text-gray-600">Região</label>
+            <select name="region" class="mt-1 rounded-md border-gray-300" onchange="this.form.submit()">
+                <option value="">Todas as regiões</option>
+                @foreach ($regions as $regionOption)
+                    <option value="{{ $regionOption }}" @selected($region === $regionOption)>{{ $regionOption }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
             <label class="block text-sm text-gray-600">Mês</label>
             <input type="number" name="month" min="1" max="12" value="{{ $month }}" class="mt-1 w-20 rounded-md border-gray-300">
         </div>
@@ -27,28 +36,35 @@
             <label class="block text-sm text-gray-600">Ano</label>
             <input type="number" name="year" value="{{ $year }}" class="mt-1 w-24 rounded-md border-gray-300">
         </div>
-        <button type="submit" class="rounded-md bg-gray-800 px-4 py-2 text-sm text-white">Filtrar</button>
+        <button type="submit" class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">Filtrar</button>
     </form>
 
     <div class="mt-6">
-        <x-dashboard.data-table :headers="['Ponto', 'Status', 'Estoque', '% capacidade', 'Média mensal', 'Lucro do mês', 'Repor?', '']">
+        <x-dashboard.data-table :headers="['Ponto', 'Região', 'Status', 'Estoque', '% capacidade', 'Previsão esgot.', 'Lucro do mês', 'Situação', '']">
             @foreach ($rows as $row)
                 <tr>
                     <td class="px-4 py-2 text-sm font-medium text-gray-900">{{ $row['point']->name }}</td>
+                    <td class="px-4 py-2 text-sm text-gray-700">{{ $row['point']->region ?? '-' }}</td>
                     <td class="px-4 py-2"><x-dashboard.status-badge :status="$row['point']->status" /></td>
                     <td class="px-4 py-2 text-sm text-gray-700">{{ number_format($row['currentStock'], 1) }} kg</td>
                     <td class="px-4 py-2 text-sm text-gray-700">{{ number_format($row['stockPercentage'], 1) }}%</td>
-                    <td class="px-4 py-2 text-sm text-gray-700">{{ number_format($row['monthlyAverage'], 1) }} kg</td>
+                    <td class="px-4 py-2 text-sm text-gray-700">
+                        {{ $row['daysUntilStockout'] !== null ? '~'.number_format($row['daysUntilStockout'], 0).' dias' : '-' }}
+                    </td>
                     <td class="px-4 py-2 text-sm text-gray-700">R$ {{ number_format($row['profit'], 2, ',', '.') }}</td>
                     <td class="px-4 py-2">
-                        @if ($row['needsRestockSoon'])
-                            <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Repor em breve</span>
+                        @if ($row['urgency'] === 'critico')
+                            <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Crítico</span>
+                        @elseif ($row['urgency'] === 'repor_em_breve')
+                            <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">Repor em breve</span>
+                        @else
+                            <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">OK</span>
                         @endif
                     </td>
                     <td class="px-4 py-2 text-right">
                         <button
                             onclick="Livewire.dispatch('open-point-detail', { pointId: {{ $row['point']->id }} })"
-                            class="text-sm text-indigo-600 hover:text-indigo-800"
+                            class="text-sm text-blue-600 hover:text-blue-800"
                         >
                             Ver detalhes
                         </button>
@@ -61,7 +77,7 @@
     <div class="mt-4">
         <button
             onclick="Livewire.dispatch('open-point-form')"
-            class="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
+            class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
         >
             Novo ponto
         </button>
