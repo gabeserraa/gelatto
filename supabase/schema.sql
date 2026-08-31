@@ -35,6 +35,21 @@ create table if not exists movimentacoes_estoque (
   created_at timestamptz not null default now()
 );
 
+-- Baixa/correcao manual do estoque do freezer, sem preco/custo — usada
+-- quando o ponto vende mais rapido que o decaimento estimado prevê (ou
+-- pra corrigir uma contagem errada).
+create table if not exists ajustes_estoque (
+  id uuid primary key default gen_random_uuid(),
+  ponto_id uuid not null references pontos(id) on delete cascade,
+  quantidade_kg numeric not null check (quantidade_kg <> 0),
+  motivo text,
+  data date not null default current_date,
+  created_by uuid references auth.users(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_ajustes_estoque_ponto on ajustes_estoque(ponto_id);
+
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text not null,
@@ -87,24 +102,24 @@ create index if not exists idx_movimentacoes_data on movimentacoes_estoque(data)
 -- Views — lucro/margem/estoque are always derived, never stored
 -- ============================================================
 
--- Estoque atual do freezer: soma, entre todas as vendas do ponto, o que
--- sobra de cada entrega apos o consumo medio estimado desde a data dela
--- (nao ha evento separado de saida — a venda ja e a entrega).
+-- Estoque atual do freezer: decaimento das vendas (o que sobra de cada
+-- entrega apos o consumo medio estimado desde a data dela) somado aos
+-- ajustes manuais (baixa rapida ou correcao), sem deixar o total negativo.
 create or replace view v_pontos_estoque as
 select
   p.*,
-  coalesce(v.estoque_atual_kg, 0) as estoque_atual_kg,
+  greatest(coalesce(v.estoque_kg, 0) + coalesce(a.ajustes_kg, 0), 0) as estoque_atual_kg,
   coalesce(v.custo_medio_kg, 0) as custo_medio_kg,
-  v.ultimo_movimento,
-  case when p.consumo_medio_dia > 0 and v.estoque_atual_kg is not null
-    then round(v.estoque_atual_kg / p.consumo_medio_dia, 1)
+  greatest(v.ultimo_movimento, a.ultimo_ajuste) as ultimo_movimento,
+  case when p.consumo_medio_dia > 0
+    then round(greatest(coalesce(v.estoque_kg, 0) + coalesce(a.ajustes_kg, 0), 0) / p.consumo_medio_dia, 1)
     else null
   end as previsao_esgotamento_dias
 from pontos p
 left join (
   select
     ponto_id,
-    sum(greatest(quantidade_kg - consumo_medio_dia_ref * (current_date - data), 0)) as estoque_atual_kg,
+    sum(greatest(quantidade_kg - consumo_medio_dia_ref * (current_date - data), 0)) as estoque_kg,
     sum(quantidade_kg * custo_kg) / nullif(sum(quantidade_kg), 0) as custo_medio_kg,
     max(data) as ultimo_movimento
   from (
@@ -113,7 +128,12 @@ left join (
     join pontos p2 on p2.id = m.ponto_id
   ) m
   group by ponto_id
-) v on v.ponto_id = p.id;
+) v on v.ponto_id = p.id
+left join (
+  select ponto_id, sum(quantidade_kg) as ajustes_kg, max(data) as ultimo_ajuste
+  from ajustes_estoque
+  group by ponto_id
+) a on a.ponto_id = p.id;
 
 -- Cada venda ja tem receita/custo/lucro/margem direto nos seus proprios campos.
 create or replace view v_movimentacoes_margem as
@@ -170,6 +190,7 @@ group by ponto_id;
 
 alter table pontos enable row level security;
 alter table movimentacoes_estoque enable row level security;
+alter table ajustes_estoque enable row level security;
 alter table movimentacoes_fabrica enable row level security;
 alter table profiles enable row level security;
 alter table relatorios_gerados enable row level security;
@@ -184,6 +205,11 @@ create policy "authenticated read movimentacoes" on movimentacoes_estoque for se
 create policy "authenticated write movimentacoes" on movimentacoes_estoque for insert to authenticated with check (true);
 create policy "authenticated update movimentacoes" on movimentacoes_estoque for update to authenticated using (true);
 create policy "authenticated delete movimentacoes" on movimentacoes_estoque for delete to authenticated using (true);
+
+create policy "authenticated read ajustes_estoque" on ajustes_estoque for select to authenticated using (true);
+create policy "authenticated write ajustes_estoque" on ajustes_estoque for insert to authenticated with check (true);
+create policy "authenticated update ajustes_estoque" on ajustes_estoque for update to authenticated using (true);
+create policy "authenticated delete ajustes_estoque" on ajustes_estoque for delete to authenticated using (true);
 
 create policy "authenticated read movimentacoes_fabrica" on movimentacoes_fabrica for select to authenticated using (true);
 create policy "authenticated write movimentacoes_fabrica" on movimentacoes_fabrica for insert to authenticated with check (true);

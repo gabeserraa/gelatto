@@ -8,16 +8,24 @@ const TIPOS = [
   { value: 'bar', label: 'Bar' },
 ]
 
-export default function PontoFormModal({ onClose, onSaved }) {
+const STATUS = [
+  { value: 'ativo', label: 'Ativo' },
+  { value: 'inativo', label: 'Inativo' },
+  { value: 'manutencao', label: 'Manutenção' },
+]
+
+export default function PontoFormModal({ ponto, onClose, onSaved }) {
+  const isEdit = Boolean(ponto)
   const [form, setForm] = useState({
-    nome: '',
-    endereco: '',
-    tipo: 'bar',
-    capacidade_kg: '',
-    consumo_medio_dia: '',
-    regiao: '',
-    latitude: '',
-    longitude: '',
+    nome: ponto?.nome ?? '',
+    endereco: ponto?.endereco ?? '',
+    tipo: ponto?.tipo ?? 'bar',
+    status: ponto?.status ?? 'ativo',
+    capacidade_kg: ponto?.capacidade_kg ?? '',
+    consumo_medio_dia: ponto?.consumo_medio_dia ?? '',
+    regiao: ponto?.regiao ?? '',
+    latitude: ponto?.latitude ?? '',
+    longitude: ponto?.longitude ?? '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -31,16 +39,21 @@ export default function PontoFormModal({ onClose, onSaved }) {
     setSaving(true)
     setError(null)
 
-    const { error } = await supabase.from('pontos').insert({
+    const payload = {
       nome: form.nome,
       endereco: form.endereco,
       tipo: form.tipo,
+      status: form.status,
       capacidade_kg: Number(form.capacidade_kg),
       consumo_medio_dia: Number(form.consumo_medio_dia),
       regiao: form.regiao,
       latitude: form.latitude ? Number(form.latitude) : null,
       longitude: form.longitude ? Number(form.longitude) : null,
-    })
+    }
+
+    const { error } = isEdit
+      ? await supabase.from('pontos').update(payload).eq('id', ponto.id)
+      : await supabase.from('pontos').insert(payload)
 
     setSaving(false)
     if (error) {
@@ -54,7 +67,9 @@ export default function PontoFormModal({ onClose, onSaved }) {
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-navy-950/40 px-4">
       <div className="w-full max-w-md rounded-card border border-slate-200 bg-white p-6 shadow-card">
-        <h2 className="font-display text-base font-semibold text-navy-950">Novo Ponto</h2>
+        <h2 className="font-display text-base font-semibold text-navy-950">
+          {isEdit ? 'Editar Ponto' : 'Novo Ponto'}
+        </h2>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
@@ -100,6 +115,24 @@ export default function PontoFormModal({ onClose, onSaved }) {
               />
             </div>
           </div>
+
+          {isEdit && (
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Status</label>
+              <select
+                value={form.status}
+                onChange={set('status')}
+                className="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm text-navy-950 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              >
+                {STATUS.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">Capacidade (kg)</label>

@@ -5,7 +5,8 @@ import UrgencyBadge, { urgencyFromRatio } from '../components/dashboard/UrgencyB
 import ProgressBar from '../components/dashboard/ProgressBar'
 import VendaModal from '../components/dashboard/VendaModal'
 import PontoFormModal from '../components/dashboard/PontoFormModal'
-import { IconPlus, IconSearch, IconTrash } from '../components/icons'
+import AjusteEstoqueModal from '../components/dashboard/AjusteEstoqueModal'
+import { IconMinusCircle, IconPencil, IconPlus, IconSearch, IconTrash } from '../components/icons'
 
 const PontosMap = lazy(() => import('../components/dashboard/PontosMap'))
 import { formatKg } from '../lib/format'
@@ -20,6 +21,8 @@ export default function Pontos() {
   const [regiaoFilter, setRegiaoFilter] = useState('todas')
   const [movementFor, setMovementFor] = useState(null)
   const [showNewPonto, setShowNewPonto] = useState(false)
+  const [editingPonto, setEditingPonto] = useState(null)
+  const [adjustingPonto, setAdjustingPonto] = useState(null)
 
   const regioes = useMemo(() => [...new Set(pontos.map((p) => p.regiao))].sort(), [pontos])
 
@@ -123,6 +126,13 @@ export default function Pontos() {
                   <div className="flex shrink-0 items-center gap-2">
                     <UrgencyBadge status={p.status} />
                     <button
+                      onClick={() => setEditingPonto(p)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-navy-950"
+                      aria-label={`Editar ${p.nome}`}
+                    >
+                      <IconPencil className="h-4 w-4" />
+                    </button>
+                    <button
                       onClick={() => handleDelete(p)}
                       className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600"
                       aria-label={`Excluir ${p.nome}`}
@@ -157,12 +167,22 @@ export default function Pontos() {
                   </span>
                 </div>
 
-                <button
-                  onClick={() => setMovementFor(p.id)}
-                  className="mt-4 rounded-[10px] bg-navy-950 px-3 py-2 text-xs font-semibold text-white hover:bg-navy-800"
-                >
-                  Registrar Venda
-                </button>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => setMovementFor(p.id)}
+                    className="flex-1 rounded-[10px] bg-navy-950 px-3 py-2 text-xs font-semibold text-white hover:bg-navy-800"
+                  >
+                    Registrar Venda
+                  </button>
+                  <button
+                    onClick={() => setAdjustingPonto(p)}
+                    className="flex items-center justify-center gap-1.5 rounded-[10px] border border-slate-200 px-3 py-2 text-xs font-semibold text-navy-950 hover:bg-slate-50"
+                    aria-label={`Ajustar estoque de ${p.nome}`}
+                  >
+                    <IconMinusCircle className="h-4 w-4" />
+                    Ajustar
+                  </button>
+                </div>
               </div>
             )
           })}
@@ -179,6 +199,18 @@ export default function Pontos() {
       )}
 
       {showNewPonto && <PontoFormModal onClose={() => setShowNewPonto(false)} onSaved={refresh} />}
+
+      {editingPonto && (
+        <PontoFormModal ponto={editingPonto} onClose={() => setEditingPonto(null)} onSaved={refresh} />
+      )}
+
+      {adjustingPonto && (
+        <AjusteEstoqueModal
+          ponto={adjustingPonto}
+          onClose={() => setAdjustingPonto(null)}
+          onSaved={refresh}
+        />
+      )}
     </div>
   )
 }

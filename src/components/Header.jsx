@@ -20,7 +20,7 @@ export default function Header({ path, onOpenMenu }) {
 
   useEffect(() => {
     supabase
-      .from('pontos')
+      .from('v_pontos_estoque')
       .select('id, nome, estoque_atual_kg, capacidade_kg')
       .then(({ data }) => {
         if (!data) return
