@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabaseClient'
-import { IconBell, IconLogout } from './icons'
+import { IconBell, IconLogout, IconMenu } from './icons'
 
 const PAGE_TITLES = {
   '/': 'Visão Geral',
@@ -12,7 +12,7 @@ const PAGE_TITLES = {
   '/configuracoes': 'Configurações',
 }
 
-export default function Header({ path }) {
+export default function Header({ path, onOpenMenu }) {
   const { signOut } = useAuth()
   const [open, setOpen] = useState(false)
   const [alerts, setAlerts] = useState([])
@@ -32,9 +32,18 @@ export default function Header({ path }) {
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8">
-      <div>
-        <h1 className="font-display text-lg font-bold text-navy-950">{title}</h1>
-        <p className="text-xs text-slate-400">Gelatto ICE CO. · Painel de Gestão</p>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onOpenMenu}
+          className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 lg:hidden"
+          aria-label="Abrir menu"
+        >
+          <IconMenu className="h-5 w-5" />
+        </button>
+        <div>
+          <h1 className="font-display text-lg font-bold text-navy-950">{title}</h1>
+          <p className="text-xs text-slate-400">Gelatto ICE CO. · Painel de Gestão</p>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
