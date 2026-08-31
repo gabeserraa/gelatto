@@ -123,6 +123,23 @@ class OverviewKpiService
             ->count();
     }
 
+    public function consumptionReport(Carbon $start, Carbon $end): array
+    {
+        $report = $this->points()->map(function (Point $point) use ($start, $end) {
+            $movements = $point->movements->filter(
+                fn ($m) => $m->type === 'retirada' && $m->occurred_at->between($start, $end)
+            );
+
+            return [
+                'point' => $point,
+                'kg' => (float) $movements->sum(fn ($m) => (float) $m->quantity_kg),
+                'revenue' => (float) $movements->sum(fn ($m) => (float) ($m->revenue ?? 0)),
+            ];
+        })->sortByDesc('kg')->values();
+
+        return $report->all();
+    }
+
     public function fullRanking(Carbon $start, Carbon $end): array
     {
         $previousStart = $start->copy()->subMonthNoOverflow()->startOfMonth();

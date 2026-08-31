@@ -13,6 +13,13 @@ Route::middleware('auth')->prefix('dashboards')->name('dashboards.')->group(func
     Route::get('/estoque', [\App\Http\Controllers\Dashboards\InventoryDashboardController::class, 'index'])->name('inventory.index');
     Route::get('/estoque/exportar', [\App\Http\Controllers\Dashboards\InventoryDashboardController::class, 'export'])->name('inventory.export');
     Route::get('/financeiro', [\App\Http\Controllers\Dashboards\FinancialDashboardController::class, 'index'])->name('financial.index');
+
+    Route::prefix('relatorios')->name('reports.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Dashboards\ReportsDashboardController::class, 'index'])->name('index');
+        Route::get('/financeiro', [\App\Http\Controllers\Dashboards\ReportsDashboardController::class, 'exportFinancial'])->name('financial');
+        Route::get('/consumo', [\App\Http\Controllers\Dashboards\ReportsDashboardController::class, 'exportConsumption'])->name('consumption');
+        Route::get('/reposicoes', [\App\Http\Controllers\Dashboards\ReportsDashboardController::class, 'exportReplenishments'])->name('replenishments');
+    });
 });
 
 Route::middleware('auth')->group(function () {

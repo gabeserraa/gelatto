@@ -215,6 +215,34 @@ class OverviewKpiServiceTest extends TestCase
         $this->assertSame(2000.0, $projection['projectedProfit']);
     }
 
+    public function test_consumption_report_sums_kg_and_revenue_per_point_sorted_by_kg_descending(): void
+    {
+        $high = Point::factory()->create(['name' => 'Ponto Alto']);
+        $low = Point::factory()->create(['name' => 'Ponto Baixo']);
+
+        PointMovement::factory()->create([
+            'point_id' => $high->id, 'type' => 'retirada', 'quantity_kg' => 80,
+            'revenue' => 400, 'occurred_at' => now(),
+        ]);
+        PointMovement::factory()->create([
+            'point_id' => $low->id, 'type' => 'retirada', 'quantity_kg' => 20,
+            'revenue' => 100, 'occurred_at' => now(),
+        ]);
+        PointMovement::factory()->create([
+            'point_id' => $low->id, 'type' => 'retirada', 'quantity_kg' => 999,
+            'revenue' => 999, 'occurred_at' => now()->subMonths(2),
+        ]);
+
+        $report = $this->service->consumptionReport(now()->startOfMonth(), now()->endOfMonth());
+
+        $this->assertCount(2, $report);
+        $this->assertSame('Ponto Alto', $report[0]['point']->name);
+        $this->assertSame(80.0, $report[0]['kg']);
+        $this->assertSame(400.0, $report[0]['revenue']);
+        $this->assertSame('Ponto Baixo', $report[1]['point']->name);
+        $this->assertSame(20.0, $report[1]['kg']);
+    }
+
     public function test_margin_change_returns_delta_in_percentage_points(): void
     {
         $point = Point::factory()->create();

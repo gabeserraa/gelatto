@@ -37,6 +37,13 @@ return [
             'route' => 'dashboards.financial.index',
             'order' => 4,
         ],
+        [
+            'key' => 'reports',
+            'name' => 'Relatórios',
+            'icon' => 'document',
+            'route' => 'dashboards.reports.index',
+            'order' => 5,
+        ],
         // Fora de escopo — registrar aqui quando forem implementados:
         // 'reposicao'   — ranking de urgência de reposição, rota semanal
         // 'mapa'        — pontos no mapa (Leaflet.js + OpenStreetMap)
