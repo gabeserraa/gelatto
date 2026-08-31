@@ -104,6 +104,15 @@ export function IconX(props) {
   )
 }
 
+export function IconFactory(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M2 21V10l6 4v-4l6 4v-4l6 4v7Z" />
+      <path d="M2 21h20M6 10V6M6 6h3v4" />
+    </svg>
+  )
+}
+
 export function IconTrash(props) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>

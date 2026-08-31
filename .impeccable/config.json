@@ -26,6 +26,15 @@
         ],
         "createdAt": "2026-08-31T16:40:22.404Z",
         "reason": "Falso positivo: botao de excluir troca bg E texto juntos no hover (hover:bg-red-50 hover:text-red-600), nunca fica texto cinza sobre fundo colorido simultaneamente, mesmo padrao ja aprovado em Pontos.jsx"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "src/pages/Fabrica.jsx"
+        ],
+        "createdAt": "2026-08-31T16:51:23.480Z",
+        "reason": "Falso positivo: botao de excluir troca bg E texto juntos no hover (hover:bg-red-50 hover:text-red-600), mesmo padrao ja aprovado em Pontos.jsx e Estoque.jsx"
       }
     ]
   }

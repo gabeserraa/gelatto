@@ -51,6 +51,22 @@ create table if not exists app_settings (
 );
 insert into app_settings (id) values (true) on conflict (id) do nothing;
 
+-- Estoque da fábrica: gelo produzido/armazenado antes de ser distribuído
+-- aos pontos parceiros. Ledger separado — nao participa dos calculos de
+-- lucro/ranking por ponto, e apenas um controle de entrada/saida.
+create table if not exists movimentacoes_fabrica (
+  id uuid primary key default gen_random_uuid(),
+  tipo text not null check (tipo in ('entrada', 'saida')),
+  quantidade_kg numeric not null check (quantidade_kg > 0),
+  valor_unitario numeric not null check (valor_unitario >= 0),
+  data date not null default current_date,
+  observacao text,
+  created_by uuid references auth.users(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_movimentacoes_fabrica_data on movimentacoes_fabrica(data);
+
 create table if not exists relatorios_gerados (
   id uuid primary key default gen_random_uuid(),
   tipo text not null check (tipo in ('consumo_por_ponto', 'financeiro_mensal', 'reposicoes', 'estoque_consolidado')),
@@ -119,6 +135,21 @@ from v_movimentacoes_margem
 group by 1
 order by 1;
 
+-- Estoque atual e custo médio ponderado da fábrica (linha única).
+create or replace view v_estoque_fabrica as
+select
+  coalesce((select sum(quantidade_kg) from movimentacoes_fabrica where tipo = 'entrada'), 0)
+    - coalesce((select sum(quantidade_kg) from movimentacoes_fabrica where tipo = 'saida'), 0) as estoque_atual_kg,
+  case when coalesce((select sum(quantidade_kg) from movimentacoes_fabrica where tipo = 'entrada'), 0) > 0
+    then (select sum(quantidade_kg * valor_unitario) from movimentacoes_fabrica where tipo = 'entrada')
+         / (select sum(quantidade_kg) from movimentacoes_fabrica where tipo = 'entrada')
+    else 0
+  end as custo_medio_kg,
+  greatest(
+    (select max(data) from movimentacoes_fabrica where tipo = 'entrada'),
+    (select max(data) from movimentacoes_fabrica where tipo = 'saida')
+  ) as ultimo_movimento;
+
 -- Ranking de lucro por ponto no mês corrente vs mês anterior.
 create or replace view v_lucro_por_ponto as
 select
@@ -135,6 +166,7 @@ group by ponto_id;
 
 alter table pontos enable row level security;
 alter table movimentacoes_estoque enable row level security;
+alter table movimentacoes_fabrica enable row level security;
 alter table profiles enable row level security;
 alter table relatorios_gerados enable row level security;
 alter table app_settings enable row level security;
@@ -148,6 +180,11 @@ create policy "authenticated read movimentacoes" on movimentacoes_estoque for se
 create policy "authenticated write movimentacoes" on movimentacoes_estoque for insert to authenticated with check (true);
 create policy "authenticated update movimentacoes" on movimentacoes_estoque for update to authenticated using (true);
 create policy "authenticated delete movimentacoes" on movimentacoes_estoque for delete to authenticated using (true);
+
+create policy "authenticated read movimentacoes_fabrica" on movimentacoes_fabrica for select to authenticated using (true);
+create policy "authenticated write movimentacoes_fabrica" on movimentacoes_fabrica for insert to authenticated with check (true);
+create policy "authenticated update movimentacoes_fabrica" on movimentacoes_fabrica for update to authenticated using (true);
+create policy "authenticated delete movimentacoes_fabrica" on movimentacoes_fabrica for delete to authenticated using (true);
 
 create policy "authenticated read profiles" on profiles for select to authenticated using (true);
 create policy "user updates own profile" on profiles for update to authenticated using (auth.uid() = id);

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 
-export default function MovementModal({ pontos, defaultPontoId, onClose, onSaved }) {
-  const [pontoId, setPontoId] = useState(defaultPontoId ?? pontos[0]?.id ?? '')
+export default function MovementModal({ pontos, defaultPontoId, table = 'movimentacoes_estoque', onClose, onSaved }) {
+  const [pontoId, setPontoId] = useState(defaultPontoId ?? pontos?.[0]?.id ?? '')
   const [tipo, setTipo] = useState('entrada')
   const [quantidade, setQuantidade] = useState('')
   const [valorUnitario, setValorUnitario] = useState('')
@@ -20,14 +20,16 @@ export default function MovementModal({ pontos, defaultPontoId, onClose, onSaved
     setSaving(true)
     setError(null)
 
-    const { error } = await supabase.from('movimentacoes_estoque').insert({
-      ponto_id: pontoId,
+    const payload = {
       tipo,
       quantidade_kg: Number(quantidade),
       valor_unitario: Number(valorUnitario),
       data,
       observacao: observacao || null,
-    })
+    }
+    if (pontos) payload.ponto_id = pontoId
+
+    const { error } = await supabase.from(table).insert(payload)
 
     setSaving(false)
     if (error) {
@@ -44,21 +46,23 @@ export default function MovementModal({ pontos, defaultPontoId, onClose, onSaved
         <h2 className="font-display text-base font-semibold text-navy-950">Registrar Movimentação</h2>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Ponto</label>
-            <select
-              required
-              value={pontoId}
-              onChange={(e) => setPontoId(e.target.value)}
-              className="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm text-navy-950 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-            >
-              {pontos.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nome}
-                </option>
-              ))}
-            </select>
-          </div>
+          {pontos && (
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Ponto</label>
+              <select
+                required
+                value={pontoId}
+                onChange={(e) => setPontoId(e.target.value)}
+                className="w-full rounded-[10px] border border-slate-200 px-3 py-2 text-sm text-navy-950 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              >
+                {pontos.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-2">
             <button
@@ -96,7 +100,7 @@ export default function MovementModal({ pontos, defaultPontoId, onClose, onSaved
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">
-                {tipo === 'entrada' ? 'Custo/kg (R$)' : 'Preço venda/kg (R$)'}
+                {tipo === 'entrada' ? 'Custo/kg (R$)' : pontos ? 'Preço venda/kg (R$)' : 'Custo/kg (R$)'}
               </label>
               <input
                 type="number"

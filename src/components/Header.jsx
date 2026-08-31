@@ -7,6 +7,7 @@ const PAGE_TITLES = {
   '/': 'Visão Geral',
   '/pontos': 'Pontos de Freezer',
   '/estoque': 'Estoque',
+  '/fabrica': 'Estoque da Fábrica',
   '/financeiro': 'Financeiro & Lucro',
   '/relatorios': 'Relatórios',
   '/configuracoes': 'Configurações',
