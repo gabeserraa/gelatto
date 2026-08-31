@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-08-31T11:52:55.107Z",
+        "reason": "DESIGN.md pins Inter as body typeface, read from client's approved Figma prototype (churn-space-56833911.figma.site) — not a fresh AI-generated choice, matching existing sanctioned design system"
+      }
+    ]
+  }
+}
