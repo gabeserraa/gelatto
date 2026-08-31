@@ -9,8 +9,8 @@
 
     <form method="GET" class="mt-6 flex flex-wrap items-end gap-3">
         <div>
-            <label class="block text-sm text-gray-600">Status</label>
-            <select name="status" class="mt-1 rounded-md border-gray-300" onchange="this.form.submit()">
+            <label class="block text-sm text-slate-600">Status</label>
+            <select name="status" class="mt-1 rounded-[10px] border-slate-300" onchange="this.form.submit()">
                 <option value="">Todos</option>
                 <option value="ativo" @selected($status === 'ativo')>Ativo</option>
                 <option value="inativo" @selected($status === 'inativo')>Inativo</option>
@@ -18,8 +18,8 @@
             </select>
         </div>
         <div>
-            <label class="block text-sm text-gray-600">Região</label>
-            <select name="region" class="mt-1 rounded-md border-gray-300" onchange="this.form.submit()">
+            <label class="block text-sm text-slate-600">Região</label>
+            <select name="region" class="mt-1 rounded-[10px] border-slate-300" onchange="this.form.submit()">
                 <option value="">Todas as regiões</option>
                 @foreach ($regions as $regionOption)
                     <option value="{{ $regionOption }}" @selected($region === $regionOption)>{{ $regionOption }}</option>
@@ -27,15 +27,15 @@
             </select>
         </div>
         <div>
-            <label class="block text-sm text-gray-600">Mês</label>
-            <input type="number" name="month" min="1" max="12" value="{{ $month }}" class="mt-1 w-20 rounded-md border-gray-300">
+            <label class="block text-sm text-slate-600">Mês</label>
+            <input type="number" name="month" min="1" max="12" value="{{ $month }}" class="mt-1 w-20 rounded-[10px] border-slate-300">
         </div>
         <div>
-            <label class="block text-sm text-gray-600">Ano</label>
-            <input type="number" name="year" value="{{ $year }}" class="mt-1 w-24 rounded-md border-gray-300">
+            <label class="block text-sm text-slate-600">Ano</label>
+            <input type="number" name="year" value="{{ $year }}" class="mt-1 w-24 rounded-[10px] border-slate-300">
         </div>
-        <button type="submit" class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">Filtrar</button>
-        <a href="{{ route('dashboards.inventory.export', request()->query()) }}" class="ml-auto rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+        <button type="submit" class="rounded-[10px] bg-navy-950 px-4 py-2 text-[13px] font-semibold text-white hover:bg-navy-800">Filtrar</button>
+        <a href="{{ route('dashboards.inventory.export', request()->query()) }}" class="ml-auto rounded-[10px] border border-slate-300 px-4 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-50">
             Exportar CSV
         </a>
     </form>
@@ -44,27 +44,27 @@
         <x-dashboard.data-table :headers="['Ponto', 'Região', 'Entrada', 'Saída', 'Estoque atual', 'Custo unit.', 'Valor total', 'Margem %', 'Situação', '']" :paginator="$rows">
             @forelse ($rows as $row)
                 <tr>
-                    <td class="px-4 py-2 text-sm font-medium text-gray-900">{{ $row['point']->name }}</td>
-                    <td class="px-4 py-2 text-sm text-gray-700">{{ $row['point']->region ?? '-' }}</td>
-                    <td class="px-4 py-2 text-sm text-gray-700">{{ number_format($row['entrada'], 1) }} kg</td>
-                    <td class="px-4 py-2 text-sm text-gray-700">{{ number_format($row['saida'], 1) }} kg</td>
-                    <td class="px-4 py-2 text-sm text-gray-700">{{ number_format($row['currentStock'], 1) }} kg</td>
-                    <td class="px-4 py-2 text-sm text-gray-700">R$ {{ number_format($row['costPerKg'], 2, ',', '.') }}</td>
-                    <td class="px-4 py-2 text-sm font-medium text-gray-900">R$ {{ number_format($row['stockValue'], 2, ',', '.') }}</td>
-                    <td class="px-4 py-2 text-sm text-gray-700">{{ number_format($row['margin'], 1) }}%</td>
-                    <td class="px-4 py-2">
+                    <td class="px-4 py-3 text-sm font-medium text-navy-950">{{ $row['point']->name }}</td>
+                    <td class="px-4 py-3 text-sm text-slate-700">{{ $row['point']->region ?? '-' }}</td>
+                    <td class="px-4 py-3 text-sm text-slate-700">{{ number_format($row['entrada'], 1) }} kg</td>
+                    <td class="px-4 py-3 text-sm text-slate-700">{{ number_format($row['saida'], 1) }} kg</td>
+                    <td class="px-4 py-3 text-sm text-slate-700">{{ number_format($row['currentStock'], 1) }} kg</td>
+                    <td class="px-4 py-3 text-sm text-slate-700">R$ {{ number_format($row['costPerKg'], 2, ',', '.') }}</td>
+                    <td class="px-4 py-3 text-sm font-medium text-navy-950">R$ {{ number_format($row['stockValue'], 2, ',', '.') }}</td>
+                    <td class="px-4 py-3 text-sm text-slate-700">{{ number_format($row['margin'], 1) }}%</td>
+                    <td class="px-4 py-3">
                         @if ($row['urgency'] === 'critico')
-                            <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Crítico</span>
+                            <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-[3px] text-[11px] font-semibold text-red-700">Crítico</span>
                         @elseif ($row['urgency'] === 'repor_em_breve')
-                            <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">Repor em breve</span>
+                            <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-[3px] text-[11px] font-semibold text-amber-700">Repor em breve</span>
                         @else
-                            <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">OK</span>
+                            <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-[3px] text-[11px] font-semibold text-emerald-700">OK</span>
                         @endif
                     </td>
-                    <td class="px-4 py-2 text-right">
+                    <td class="px-4 py-3 text-right">
                         <button
                             onclick="Livewire.dispatch('open-movement-form', { pointId: {{ $row['point']->id }} })"
-                            class="text-sm text-blue-600 hover:text-blue-800"
+                            class="text-sm text-cyan-600 hover:text-cyan-700"
                         >
                             Lançar movimentação
                         </button>
@@ -72,7 +72,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="10" class="px-4 py-6 text-center text-sm text-gray-500">Nenhum ponto encontrado.</td>
+                    <td colspan="10" class="px-4 py-6 text-center text-sm text-slate-500">Nenhum ponto encontrado.</td>
                 </tr>
             @endforelse
         </x-dashboard.data-table>

@@ -1,15 +1,15 @@
 @props(['headers' => [], 'paginator' => null])
 
-<div {{ $attributes->merge(['class' => 'overflow-x-auto rounded-lg bg-white shadow']) }}>
-    <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
+<div {{ $attributes->merge(['class' => 'overflow-x-auto rounded-card border border-slate-200 bg-white shadow-card']) }}>
+    <table class="min-w-full divide-y divide-slate-100">
+        <thead class="bg-slate-50/60">
             <tr>
                 @foreach ($headers as $header)
-                    <th class="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">{{ $header }}</th>
+                    <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400">{{ $header }}</th>
                 @endforeach
             </tr>
         </thead>
-        <tbody class="divide-y divide-gray-200">
+        <tbody class="divide-y divide-slate-100">
             {{ $slot }}
         </tbody>
     </table>

@@ -11,7 +11,7 @@
     @foreach ($settingsNavItems as $item)
         <a
             href="{{ route($item['route']) }}"
-            class="block rounded-md px-3 py-2 text-sm font-medium {{ request()->routeIs($item['route']) ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50' }}"
+            class="block rounded-[9px] px-3 py-2 text-[13px] font-medium {{ request()->routeIs($item['route']) ? 'bg-cyan-500/[0.13] font-semibold text-cyan-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}"
         >
             {{ $item['label'] }}
         </a>

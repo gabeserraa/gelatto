@@ -22,21 +22,21 @@
     </div>
 
     <div class="mt-6">
-        <h3 class="mb-2 text-sm font-medium text-gray-700">Pontos que precisam de reposição</h3>
+        <h3 class="mb-3 font-display text-sm font-semibold text-navy-950">Pontos que precisam de reposição</h3>
         @if ($restockList->isEmpty())
-            <p class="rounded-lg bg-white p-4 text-sm text-gray-500 shadow">Nenhum ponto ativo precisa de reposição no momento.</p>
+            <p class="rounded-card border border-slate-200 bg-white p-5 text-sm text-slate-500 shadow-card">Nenhum ponto ativo precisa de reposição no momento.</p>
         @else
             <x-dashboard.data-table :headers="['Ponto', 'Situação', 'Estoque atual', 'Previsão de esgotamento']">
                 @foreach ($restockList as $row)
                     <tr>
-                        <td class="px-4 py-2 text-sm font-medium text-gray-900">{{ $row['point']->name }}</td>
-                        <td class="px-4 py-2">
-                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $row['urgency'] === 'critico' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800' }}">
+                        <td class="px-4 py-3 text-sm font-medium text-navy-950">{{ $row['point']->name }}</td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center rounded-full px-2.5 py-[3px] text-[11px] font-semibold {{ $row['urgency'] === 'critico' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700' }}">
                                 {{ $row['urgency'] === 'critico' ? 'Crítico' : 'Repor em breve' }}
                             </span>
                         </td>
-                        <td class="px-4 py-2 text-sm text-gray-700">{{ number_format($row['currentStock'], 1) }} kg</td>
-                        <td class="px-4 py-2 text-sm text-gray-700">
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ number_format($row['currentStock'], 1) }} kg</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">
                             {{ $row['daysUntilStockout'] !== null ? '~'.number_format($row['daysUntilStockout'], 0).' dias' : '-' }}
                         </td>
                     </tr>
@@ -47,23 +47,23 @@
 
     <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div>
-            <h3 class="mb-2 text-sm font-medium text-gray-700">Mais lucrativos</h3>
+            <h3 class="mb-3 font-display text-sm font-semibold text-navy-950">Mais lucrativos</h3>
             <x-dashboard.data-table :headers="['Ponto', 'Lucro do mês']">
                 @foreach ($ranking['top'] as $item)
                     <tr>
-                        <td class="px-4 py-2 text-sm text-gray-900">{{ $item['point']->name }}</td>
-                        <td class="px-4 py-2 text-sm text-gray-700">R$ {{ number_format($item['profit'], 2, ',', '.') }}</td>
+                        <td class="px-4 py-3 text-sm text-navy-950">{{ $item['point']->name }}</td>
+                        <td class="px-4 py-3 text-sm font-medium text-emerald-600">R$ {{ number_format($item['profit'], 2, ',', '.') }}</td>
                     </tr>
                 @endforeach
             </x-dashboard.data-table>
         </div>
         <div>
-            <h3 class="mb-2 text-sm font-medium text-gray-700">Menos lucrativos</h3>
+            <h3 class="mb-3 font-display text-sm font-semibold text-navy-950">Menos lucrativos</h3>
             <x-dashboard.data-table :headers="['Ponto', 'Lucro do mês']">
                 @foreach ($ranking['bottom'] as $item)
                     <tr>
-                        <td class="px-4 py-2 text-sm text-gray-900">{{ $item['point']->name }}</td>
-                        <td class="px-4 py-2 text-sm text-gray-700">R$ {{ number_format($item['profit'], 2, ',', '.') }}</td>
+                        <td class="px-4 py-3 text-sm text-navy-950">{{ $item['point']->name }}</td>
+                        <td class="px-4 py-3 text-sm font-medium text-slate-600">R$ {{ number_format($item['profit'], 2, ',', '.') }}</td>
                     </tr>
                 @endforeach
             </x-dashboard.data-table>
@@ -73,16 +73,19 @@
     @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const cyanRamp = ['#06b6d4', '#22d3ee', '#67e8f9', '#0e7490', '#0891b2', '#a5f3fc', '#155e75', '#cffafe', '#164e63', '#38bdf8'];
+
             new Chart(document.getElementById('monthly-chart'), {
                 type: 'line',
                 data: {
                     labels: @json(collect($series)->pluck('label')),
                     datasets: [
-                        { label: 'Receita', data: @json(collect($series)->pluck('revenue')), borderColor: '#2563eb' },
-                        { label: 'Custo', data: @json(collect($series)->pluck('cost')), borderColor: '#dc2626' },
-                        { label: 'Lucro', data: @json(collect($series)->pluck('profit')), borderColor: '#16a34a' },
+                        { label: 'Receita', data: @json(collect($series)->pluck('revenue')), borderColor: '#06b6d4', backgroundColor: '#06b6d4', tension: 0.35, pointRadius: 3 },
+                        { label: 'Custo', data: @json(collect($series)->pluck('cost')), borderColor: '#ef4444', backgroundColor: '#ef4444', tension: 0.35, pointRadius: 3 },
+                        { label: 'Lucro', data: @json(collect($series)->pluck('profit')), borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.35, pointRadius: 3 },
                     ],
                 },
+                options: { plugins: { legend: { labels: { usePointStyle: true, boxWidth: 8 } } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#f1f5f9' } } } },
             });
 
             new Chart(document.getElementById('movement-type-chart'), {
@@ -95,10 +98,12 @@
                             {{ $movementTypes['retirada'] }},
                             {{ $movementTypes['ajuste'] }},
                         ],
-                        backgroundColor: ['#2563eb', '#f59e0b', '#94a3b8'],
+                        backgroundColor: ['#06b6d4', '#f59e0b', '#94a3b8'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
                     }],
                 },
-                options: { plugins: { legend: { position: 'bottom' } } },
+                options: { plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } } } },
             });
 
             new Chart(document.getElementById('stock-by-point-chart'), {
@@ -107,10 +112,12 @@
                     labels: @json(array_keys($stockByPoint)),
                     datasets: [{
                         data: @json(array_values($stockByPoint)),
-                        backgroundColor: ['#1d4ed8', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#1e40af', '#2563eb', '#38bdf8', '#7dd3fc', '#0ea5e9'],
+                        backgroundColor: cyanRamp,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
                     }],
                 },
-                options: { plugins: { legend: { position: 'bottom' } } },
+                options: { plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } } } },
             });
 
             new Chart(document.getElementById('consumption-by-type-chart'), {
@@ -119,10 +126,12 @@
                     labels: @json(array_keys($consumptionByPointType)),
                     datasets: [{
                         data: @json(array_values($consumptionByPointType)),
-                        backgroundColor: ['#2563eb', '#38bdf8', '#f59e0b', '#94a3b8', '#16a34a', '#a855f7'],
+                        backgroundColor: ['#06b6d4', '#f59e0b', '#10b981', '#94a3b8', '#0e7490', '#ef4444'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
                     }],
                 },
-                options: { plugins: { legend: { position: 'bottom' } } },
+                options: { plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } } } },
             });
 
             new Chart(document.getElementById('financial-chart'), {
@@ -135,10 +144,12 @@
                             {{ $comparison['current']['cost'] }},
                             {{ max($comparison['current']['profit'], 0) }},
                         ],
-                        backgroundColor: ['#2563eb', '#dc2626', '#16a34a'],
+                        backgroundColor: ['#06b6d4', '#ef4444', '#10b981'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
                     }],
                 },
-                options: { plugins: { legend: { position: 'bottom' } } },
+                options: { plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } } } },
             });
         });
     </script>
