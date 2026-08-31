@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 
-export default function AjusteEstoqueModal({ ponto, onClose, onSaved }) {
-  const [quantidade, setQuantidade] = useState('')
-  const [motivo, setMotivo] = useState('')
-  const [data, setData] = useState(() => new Date().toISOString().slice(0, 10))
+export default function AjusteEstoqueModal({ ponto, ajuste, onClose, onSaved }) {
+  const isEdit = Boolean(ajuste)
+  const pontoNome = ajuste?.pontos?.nome ?? ponto?.nome
+  const [quantidade, setQuantidade] = useState(ajuste ? Math.abs(ajuste.quantidade_kg) : '')
+  const [motivo, setMotivo] = useState(ajuste?.motivo ?? '')
+  const [data, setData] = useState(ajuste?.data ?? (() => new Date().toISOString().slice(0, 10)))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
@@ -13,12 +15,15 @@ export default function AjusteEstoqueModal({ ponto, onClose, onSaved }) {
     setSaving(true)
     setError(null)
 
-    const { error } = await supabase.from('ajustes_estoque').insert({
-      ponto_id: ponto.id,
+    const payload = {
       quantidade_kg: -Math.abs(Number(quantidade)),
       motivo: motivo || null,
       data,
-    })
+    }
+
+    const { error } = isEdit
+      ? await supabase.from('ajustes_estoque').update(payload).eq('id', ajuste.id)
+      : await supabase.from('ajustes_estoque').insert({ ...payload, ponto_id: ponto.id })
 
     setSaving(false)
     if (error) {
@@ -32,9 +37,11 @@ export default function AjusteEstoqueModal({ ponto, onClose, onSaved }) {
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-navy-950/40 px-4">
       <div className="w-full max-w-md rounded-card border border-slate-200 bg-white p-6 shadow-card">
-        <h2 className="font-display text-base font-semibold text-navy-950">Ajustar Estoque</h2>
+        <h2 className="font-display text-base font-semibold text-navy-950">
+          {isEdit ? 'Editar Ajuste' : 'Ajustar Estoque'}
+        </h2>
         <p className="mt-1 text-xs text-slate-400">
-          {ponto.nome} — use quando vender mais rápido que o previsto e precisar tirar do estoque na hora.
+          {pontoNome} — use quando vender mais rápido que o previsto e precisar tirar do estoque na hora.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">

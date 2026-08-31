@@ -2,13 +2,14 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import MovementModal from '../components/dashboard/MovementModal'
 import StatCard from '../components/dashboard/StatCard'
-import { IconTrash } from '../components/icons'
+import { IconPencil, IconTrash } from '../components/icons'
 import { formatCurrency, formatKg } from '../lib/format'
 
 export default function Fabrica() {
   const [estoque, setEstoque] = useState(null)
   const [movimentacoes, setMovimentacoes] = useState([])
   const [showModal, setShowModal] = useState(false)
+  const [editingMovimentacao, setEditingMovimentacao] = useState(null)
 
   const loadEstoque = useCallback(async () => {
     const { data } = await supabase.from('v_estoque_fabrica').select('*').single()
@@ -123,13 +124,22 @@ export default function Fabrica() {
                 <td className="px-4 py-3 text-slate-600">{formatCurrency(m.valor_unitario)}</td>
                 <td className="px-4 py-3 text-slate-400">{m.observacao ?? '—'}</td>
                 <td className="px-4 py-3 text-right">
-                  <button
-                    onClick={() => handleDelete(m)}
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600"
-                    aria-label="Excluir movimentação"
-                  >
-                    <IconTrash className="h-4 w-4" />
-                  </button>
+                  <div className="flex justify-end gap-1">
+                    <button
+                      onClick={() => setEditingMovimentacao(m)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-navy-950"
+                      aria-label="Editar movimentação"
+                    >
+                      <IconPencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(m)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600"
+                      aria-label="Excluir movimentação"
+                    >
+                      <IconTrash className="h-4 w-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -138,6 +148,14 @@ export default function Fabrica() {
       </div>
 
       {showModal && <MovementModal onClose={() => setShowModal(false)} onSaved={handleSaved} />}
+
+      {editingMovimentacao && (
+        <MovementModal
+          movimentacao={editingMovimentacao}
+          onClose={() => setEditingMovimentacao(null)}
+          onSaved={handleSaved}
+        />
+      )}
     </div>
   )
 }

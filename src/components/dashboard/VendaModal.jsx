@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 
-export default function VendaModal({ pontos, defaultPontoId, onClose, onSaved }) {
-  const [pontoId, setPontoId] = useState(defaultPontoId ?? pontos[0]?.id ?? '')
-  const [quantidade, setQuantidade] = useState('')
-  const [precoVenda, setPrecoVenda] = useState('')
-  const [custo, setCusto] = useState('')
-  const [data, setData] = useState(() => new Date().toISOString().slice(0, 10))
-  const [observacao, setObservacao] = useState('')
+export default function VendaModal({ pontos, defaultPontoId, venda, onClose, onSaved }) {
+  const isEdit = Boolean(venda)
+  const [pontoId, setPontoId] = useState(venda?.ponto_id ?? defaultPontoId ?? pontos[0]?.id ?? '')
+  const [quantidade, setQuantidade] = useState(venda?.quantidade_kg ?? '')
+  const [precoVenda, setPrecoVenda] = useState(venda?.preco_venda_kg ?? '')
+  const [custo, setCusto] = useState(venda?.custo_kg ?? '')
+  const [data, setData] = useState(venda?.data ?? (() => new Date().toISOString().slice(0, 10)))
+  const [observacao, setObservacao] = useState(venda?.observacao ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
@@ -20,14 +21,18 @@ export default function VendaModal({ pontos, defaultPontoId, onClose, onSaved })
     setSaving(true)
     setError(null)
 
-    const { error } = await supabase.from('movimentacoes_estoque').insert({
+    const payload = {
       ponto_id: pontoId,
       quantidade_kg: Number(quantidade),
       preco_venda_kg: Number(precoVenda),
       custo_kg: Number(custo),
       data,
       observacao: observacao || null,
-    })
+    }
+
+    const { error } = isEdit
+      ? await supabase.from('movimentacoes_estoque').update(payload).eq('id', venda.id)
+      : await supabase.from('movimentacoes_estoque').insert(payload)
 
     setSaving(false)
     if (error) {
@@ -41,7 +46,9 @@ export default function VendaModal({ pontos, defaultPontoId, onClose, onSaved })
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-navy-950/40 px-4">
       <div className="w-full max-w-md rounded-card border border-slate-200 bg-white p-6 shadow-card">
-        <h2 className="font-display text-base font-semibold text-navy-950">Registrar Venda</h2>
+        <h2 className="font-display text-base font-semibold text-navy-950">
+          {isEdit ? 'Editar Venda' : 'Registrar Venda'}
+        </h2>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>

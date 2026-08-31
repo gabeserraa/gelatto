@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 
-export default function MovementModal({ onClose, onSaved }) {
-  const [tipo, setTipo] = useState('entrada')
-  const [quantidade, setQuantidade] = useState('')
-  const [valorUnitario, setValorUnitario] = useState('')
-  const [data, setData] = useState(() => new Date().toISOString().slice(0, 10))
-  const [observacao, setObservacao] = useState('')
+export default function MovementModal({ movimentacao, onClose, onSaved }) {
+  const isEdit = Boolean(movimentacao)
+  const [tipo, setTipo] = useState(movimentacao?.tipo ?? 'entrada')
+  const [quantidade, setQuantidade] = useState(movimentacao?.quantidade_kg ?? '')
+  const [valorUnitario, setValorUnitario] = useState(movimentacao?.valor_unitario ?? '')
+  const [data, setData] = useState(movimentacao?.data ?? (() => new Date().toISOString().slice(0, 10)))
+  const [observacao, setObservacao] = useState(movimentacao?.observacao ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
@@ -15,13 +16,17 @@ export default function MovementModal({ onClose, onSaved }) {
     setSaving(true)
     setError(null)
 
-    const { error } = await supabase.from('movimentacoes_fabrica').insert({
+    const payload = {
       tipo,
       quantidade_kg: Number(quantidade),
       valor_unitario: Number(valorUnitario),
       data,
       observacao: observacao || null,
-    })
+    }
+
+    const { error } = isEdit
+      ? await supabase.from('movimentacoes_fabrica').update(payload).eq('id', movimentacao.id)
+      : await supabase.from('movimentacoes_fabrica').insert(payload)
 
     setSaving(false)
     if (error) {
@@ -35,7 +40,9 @@ export default function MovementModal({ onClose, onSaved }) {
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-navy-950/40 px-4">
       <div className="w-full max-w-md rounded-card border border-slate-200 bg-white p-6 shadow-card">
-        <h2 className="font-display text-base font-semibold text-navy-950">Registrar Movimentação</h2>
+        <h2 className="font-display text-base font-semibold text-navy-950">
+          {isEdit ? 'Editar Movimentação' : 'Registrar Movimentação'}
+        </h2>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div className="grid grid-cols-2 gap-2">

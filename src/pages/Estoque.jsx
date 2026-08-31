@@ -2,41 +2,62 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { usePontosEstoque } from '../lib/usePontosEstoque'
 import VendaModal from '../components/dashboard/VendaModal'
+import AjusteEstoqueModal from '../components/dashboard/AjusteEstoqueModal'
 import StatCard from '../components/dashboard/StatCard'
 import UrgencyBadge from '../components/dashboard/UrgencyBadge'
-import { IconTrash } from '../components/icons'
+import { IconPencil, IconTrash } from '../components/icons'
 import { formatCurrency, formatKg, formatPercent } from '../lib/format'
 
 export default function Estoque() {
   const { pontos, loading, refresh } = usePontosEstoque()
   const [margens, setMargens] = useState({})
   const [showModal, setShowModal] = useState(false)
+  const [editingVenda, setEditingVenda] = useState(null)
   const [movimentacoes, setMovimentacoes] = useState([])
+  const [ajustes, setAjustes] = useState([])
+  const [editingAjuste, setEditingAjuste] = useState(null)
 
   const loadMovimentacoes = useCallback(async () => {
     const { data } = await supabase
       .from('movimentacoes_estoque')
-      .select('id, quantidade_kg, preco_venda_kg, custo_kg, data, pontos(nome)')
+      .select('id, ponto_id, quantidade_kg, preco_venda_kg, custo_kg, data, observacao, pontos(nome)')
       .order('data', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(50)
     setMovimentacoes(data ?? [])
   }, [])
 
+  const loadAjustes = useCallback(async () => {
+    const { data } = await supabase
+      .from('ajustes_estoque')
+      .select('id, ponto_id, quantidade_kg, motivo, data, pontos(nome)')
+      .order('data', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(50)
+    setAjustes(data ?? [])
+  }, [])
+
   useEffect(() => {
     loadMovimentacoes()
-  }, [loadMovimentacoes])
+    loadAjustes()
+  }, [loadMovimentacoes, loadAjustes])
 
   async function handleDeleteMovimentacao(m) {
     if (!confirm(`Excluir essa movimentação de ${formatKg(m.quantidade_kg)} em ${m.pontos?.nome ?? '—'}? Essa ação não pode ser desfeita.`)) return
     await supabase.from('movimentacoes_estoque').delete().eq('id', m.id)
-    loadMovimentacoes()
-    refresh()
+    handleMovementSaved()
+  }
+
+  async function handleDeleteAjuste(a) {
+    if (!confirm(`Excluir esse ajuste de ${formatKg(Math.abs(a.quantidade_kg))} em ${a.pontos?.nome ?? '—'}? Essa ação não pode ser desfeita.`)) return
+    await supabase.from('ajustes_estoque').delete().eq('id', a.id)
+    handleMovementSaved()
   }
 
   function handleMovementSaved() {
     refresh()
     loadMovimentacoes()
+    loadAjustes()
   }
 
   useEffect(() => {
@@ -180,13 +201,74 @@ export default function Estoque() {
                   {formatCurrency(m.quantidade_kg * (m.preco_venda_kg - m.custo_kg))}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <button
-                    onClick={() => handleDeleteMovimentacao(m)}
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600"
-                    aria-label="Excluir movimentação"
-                  >
-                    <IconTrash className="h-4 w-4" />
-                  </button>
+                  <div className="flex justify-end gap-1">
+                    <button
+                      onClick={() => setEditingVenda(m)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-navy-950"
+                      aria-label="Editar movimentação"
+                    >
+                      <IconPencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteMovimentacao(m)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600"
+                      aria-label="Excluir movimentação"
+                    >
+                      <IconTrash className="h-4 w-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="overflow-x-auto rounded-card border border-slate-200 bg-white shadow-card">
+        <div className="border-b border-slate-100 px-5 py-4">
+          <h3 className="font-display text-sm font-semibold text-navy-950">Ajustes Recentes</h3>
+        </div>
+        <table className="w-full text-left text-sm">
+          <thead className="bg-slate-50/60">
+            <tr>
+              {['Data', 'Ponto', 'Quantidade', 'Motivo', ''].map((h) => (
+                <th key={h} className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {ajustes.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
+                  Nenhum ajuste manual registrado ainda.
+                </td>
+              </tr>
+            )}
+            {ajustes.map((a) => (
+              <tr key={a.id}>
+                <td className="px-4 py-3 text-slate-600">{a.data}</td>
+                <td className="px-4 py-3 font-medium text-navy-950">{a.pontos?.nome ?? '—'}</td>
+                <td className="px-4 py-3 text-red-600">-{formatKg(Math.abs(a.quantidade_kg))}</td>
+                <td className="px-4 py-3 text-slate-400">{a.motivo ?? '—'}</td>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex justify-end gap-1">
+                    <button
+                      onClick={() => setEditingAjuste(a)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-navy-950"
+                      aria-label="Editar ajuste"
+                    >
+                      <IconPencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteAjuste(a)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600"
+                      aria-label="Excluir ajuste"
+                    >
+                      <IconTrash className="h-4 w-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -196,6 +278,23 @@ export default function Estoque() {
 
       {showModal && (
         <VendaModal pontos={pontos} onClose={() => setShowModal(false)} onSaved={handleMovementSaved} />
+      )}
+
+      {editingVenda && (
+        <VendaModal
+          pontos={pontos}
+          venda={editingVenda}
+          onClose={() => setEditingVenda(null)}
+          onSaved={handleMovementSaved}
+        />
+      )}
+
+      {editingAjuste && (
+        <AjusteEstoqueModal
+          ajuste={editingAjuste}
+          onClose={() => setEditingAjuste(null)}
+          onSaved={handleMovementSaved}
+        />
       )}
     </div>
   )
