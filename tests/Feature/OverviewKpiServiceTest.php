@@ -144,4 +144,95 @@ class OverviewKpiServiceTest extends TestCase
 
         $this->assertSame(2, $this->service->regionsCovered());
     }
+
+    public function test_full_ranking_includes_every_point_with_margin_and_variation(): void
+    {
+        $high = Point::factory()->create(['name' => 'Arena Events']);
+        $low = Point::factory()->create(['name' => 'Bar da Esquina']);
+
+        PointMovement::factory()->create([
+            'point_id' => $high->id, 'type' => 'retirada', 'quantity_kg' => 100,
+            'revenue' => 1000, 'cost' => 300, 'occurred_at' => now(),
+        ]);
+        PointMovement::factory()->create([
+            'point_id' => $high->id, 'type' => 'retirada', 'quantity_kg' => 50,
+            'revenue' => 500, 'cost' => 100, 'occurred_at' => now()->subMonthNoOverflow(),
+        ]);
+        PointMovement::factory()->create([
+            'point_id' => $low->id, 'type' => 'retirada', 'quantity_kg' => 10,
+            'revenue' => 100, 'cost' => 80, 'occurred_at' => now(),
+        ]);
+
+        $ranking = $this->service->fullRanking(now()->startOfMonth(), now()->endOfMonth());
+
+        $this->assertCount(2, $ranking);
+        $this->assertSame('Arena Events', $ranking[0]['point']->name);
+        $this->assertSame(700.0, $ranking[0]['profit']);
+        $this->assertSame(70.0, $ranking[0]['margin']);
+        $this->assertSame(400.0, $ranking[0]['previousProfit']);
+        $this->assertSame(75.0, $ranking[0]['variationPercent']);
+        $this->assertSame('Bar da Esquina', $ranking[1]['point']->name);
+        $this->assertNull($ranking[1]['variationPercent']);
+    }
+
+    public function test_profit_share_returns_percentage_of_total_profit_per_point(): void
+    {
+        $a = Point::factory()->create(['name' => 'Ponto A']);
+        $b = Point::factory()->create(['name' => 'Ponto B']);
+
+        PointMovement::factory()->create([
+            'point_id' => $a->id, 'type' => 'retirada', 'quantity_kg' => 10,
+            'revenue' => 750, 'cost' => 0, 'occurred_at' => now(),
+        ]);
+        PointMovement::factory()->create([
+            'point_id' => $b->id, 'type' => 'retirada', 'quantity_kg' => 10,
+            'revenue' => 250, 'cost' => 0, 'occurred_at' => now(),
+        ]);
+
+        $share = $this->service->profitShare(now()->startOfMonth(), now()->endOfMonth());
+
+        $this->assertSame(75.0, $share['Ponto A']);
+        $this->assertSame(25.0, $share['Ponto B']);
+    }
+
+    public function test_next_month_projection_applies_current_growth_rate(): void
+    {
+        $point = Point::factory()->create();
+
+        PointMovement::factory()->create([
+            'point_id' => $point->id, 'type' => 'retirada', 'quantity_kg' => 10,
+            'revenue' => 1000, 'cost' => 0, 'occurred_at' => now(),
+        ]);
+        PointMovement::factory()->create([
+            'point_id' => $point->id, 'type' => 'retirada', 'quantity_kg' => 10,
+            'revenue' => 500, 'cost' => 0, 'occurred_at' => now()->subMonthNoOverflow(),
+        ]);
+
+        $projection = $this->service->nextMonthProjection();
+
+        // lucro atual 1000, anterior 500 -> crescimento 100%, projecao = 1000*2 = 2000
+        $this->assertSame(100.0, $projection['growthRatePercent']);
+        $this->assertSame(2000.0, $projection['projectedProfit']);
+    }
+
+    public function test_margin_change_returns_delta_in_percentage_points(): void
+    {
+        $point = Point::factory()->create();
+
+        PointMovement::factory()->create([
+            'point_id' => $point->id, 'type' => 'retirada', 'quantity_kg' => 10,
+            'revenue' => 1000, 'cost' => 300, 'occurred_at' => now(),
+        ]);
+        PointMovement::factory()->create([
+            'point_id' => $point->id, 'type' => 'retirada', 'quantity_kg' => 10,
+            'revenue' => 1000, 'cost' => 500, 'occurred_at' => now()->subMonthNoOverflow(),
+        ]);
+
+        $margin = $this->service->marginChange();
+
+        // atual: (1000-300)/1000=70%, anterior: (1000-500)/1000=50% -> +20pp
+        $this->assertSame(70.0, $margin['current']);
+        $this->assertSame(50.0, $margin['previous']);
+        $this->assertSame(20.0, $margin['deltaPp']);
+    }
 }

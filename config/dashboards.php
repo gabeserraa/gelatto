@@ -30,8 +30,14 @@ return [
             'route' => 'dashboards.inventory.index',
             'order' => 3,
         ],
+        [
+            'key' => 'financial',
+            'name' => 'Financeiro / Lucro',
+            'icon' => 'trending-up',
+            'route' => 'dashboards.financial.index',
+            'order' => 4,
+        ],
         // Fora de escopo — registrar aqui quando forem implementados:
-        // 'financeiro'  — fluxo de caixa, custos fixos x variáveis
         // 'reposicao'   — ranking de urgência de reposição, rota semanal
         // 'mapa'        — pontos no mapa (Leaflet.js + OpenStreetMap)
         // 'clientes'    — dados de contato/relacionamento por parceiro

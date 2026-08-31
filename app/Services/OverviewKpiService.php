@@ -123,6 +123,84 @@ class OverviewKpiService
             ->count();
     }
 
+    public function fullRanking(Carbon $start, Carbon $end): array
+    {
+        $previousStart = $start->copy()->subMonthNoOverflow()->startOfMonth();
+        $previousEnd = $previousStart->copy()->endOfMonth();
+
+        $ranked = $this->points()->map(function (Point $point) use ($start, $end, $previousStart, $previousEnd) {
+            $financials = $this->stockService->financials($point, $start, $end);
+            $previousFinancials = $this->stockService->financials($point, $previousStart, $previousEnd);
+
+            $margin = $financials['revenue'] > 0
+                ? round(($financials['profit'] / $financials['revenue']) * 100, 1)
+                : 0.0;
+
+            $variationPercent = $previousFinancials['profit'] != 0
+                ? round((($financials['profit'] - $previousFinancials['profit']) / abs($previousFinancials['profit'])) * 100, 1)
+                : null;
+
+            return [
+                'point' => $point,
+                'revenue' => $financials['revenue'],
+                'cost' => $financials['cost'],
+                'profit' => $financials['profit'],
+                'margin' => $margin,
+                'previousProfit' => $previousFinancials['profit'],
+                'variationPercent' => $variationPercent,
+            ];
+        })->sortByDesc('profit')->values();
+
+        return $ranked->all();
+    }
+
+    public function profitShare(Carbon $start, Carbon $end): array
+    {
+        $profits = $this->points()->mapWithKeys(
+            fn (Point $point) => [$point->name => $this->stockService->financials($point, $start, $end)['profit']]
+        );
+
+        $total = $profits->sum();
+
+        if ($total <= 0) {
+            return $profits->map(fn () => 0.0)->all();
+        }
+
+        return $profits->map(fn ($profit) => round(($profit / $total) * 100, 1))->all();
+    }
+
+    public function nextMonthProjection(): array
+    {
+        $comparison = $this->monthOverMonthComparison();
+        $current = $comparison['current']['profit'];
+        $previous = $comparison['previous']['profit'];
+
+        $growthRate = $previous != 0 ? ($current - $previous) / abs($previous) : 0.0;
+
+        return [
+            'projectedProfit' => round($current * (1 + $growthRate), 2),
+            'growthRatePercent' => round($growthRate * 100, 1),
+        ];
+    }
+
+    public function marginChange(): array
+    {
+        $comparison = $this->monthOverMonthComparison();
+
+        $marginOf = fn (array $totals) => $totals['revenue'] > 0
+            ? round(($totals['profit'] / $totals['revenue']) * 100, 1)
+            : 0.0;
+
+        $current = $marginOf($comparison['current']);
+        $previous = $marginOf($comparison['previous']);
+
+        return [
+            'current' => $current,
+            'previous' => $previous,
+            'deltaPp' => round($current - $previous, 1),
+        ];
+    }
+
     public function ranking(Carbon $start, Carbon $end, int $limit = 5): array
     {
         $points = $this->points();

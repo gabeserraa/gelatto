@@ -12,6 +12,7 @@ Route::middleware('auth')->prefix('dashboards')->name('dashboards.')->group(func
     Route::get('/geral', [\App\Http\Controllers\Dashboards\OverviewDashboardController::class, 'index'])->name('overview.index');
     Route::get('/estoque', [\App\Http\Controllers\Dashboards\InventoryDashboardController::class, 'index'])->name('inventory.index');
     Route::get('/estoque/exportar', [\App\Http\Controllers\Dashboards\InventoryDashboardController::class, 'export'])->name('inventory.export');
+    Route::get('/financeiro', [\App\Http\Controllers\Dashboards\FinancialDashboardController::class, 'index'])->name('financial.index');
 });
 
 Route::middleware('auth')->group(function () {
