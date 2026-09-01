@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useId } from 'react'
 import { supabase } from './supabaseClient'
 
 /**
@@ -10,6 +10,11 @@ import { supabase } from './supabaseClient'
  */
 export function useRealtimeRefresh(tables, onChange) {
   const tablesKey = tables.join(',')
+  // Two components subscribing to the same tables (e.g. Header + a page's
+  // own data hook) must not share a channel name — Supabase reuses the
+  // channel object for a repeated topic, and calling .on() on one that's
+  // already subscribed throws and takes down the whole render.
+  const instanceId = useId()
 
   useEffect(() => {
     let timeout = null
@@ -18,7 +23,7 @@ export function useRealtimeRefresh(tables, onChange) {
       timeout = setTimeout(onChange, 300)
     }
 
-    const channel = supabase.channel(`realtime:${tablesKey}`)
+    const channel = supabase.channel(`realtime:${tablesKey}:${instanceId}`)
     for (const table of tables) {
       channel.on('postgres_changes', { event: '*', schema: 'public', table }, debouncedRefresh)
     }
@@ -28,5 +33,5 @@ export function useRealtimeRefresh(tables, onChange) {
       clearTimeout(timeout)
       supabase.removeChannel(channel)
     }
-  }, [tablesKey])
+  }, [tablesKey, instanceId])
 }
