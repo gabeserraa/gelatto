@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { inputClass, labelClass, modalOverlayClass, modalShellClass, primaryButtonClass, secondaryButtonClass } from '../../lib/ui'
+import { formatCurrency } from '../../lib/format'
 
 export default function VendaModal({ pontos, defaultPontoId, venda, onClose, onSaved }) {
   const isEdit = Boolean(venda)
@@ -12,6 +13,11 @@ export default function VendaModal({ pontos, defaultPontoId, venda, onClose, onS
   const [observacao, setObservacao] = useState(venda?.observacao ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+
+  const prejuizo =
+    precoVenda !== '' && custo !== '' && Number(precoVenda) <= Number(custo)
+      ? Number(custo) - Number(precoVenda)
+      : null
 
   useEffect(() => {
     if (defaultPontoId) setPontoId(defaultPontoId)
@@ -117,6 +123,12 @@ export default function VendaModal({ pontos, defaultPontoId, venda, onClose, onS
               className={inputClass}
             />
           </div>
+
+          {prejuizo != null && (
+            <p className="rounded-[10px] bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+              ⚠ Essa venda dá prejuízo de {formatCurrency(prejuizo)}/kg (custo maior que o preço de venda).
+            </p>
+          )}
 
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
