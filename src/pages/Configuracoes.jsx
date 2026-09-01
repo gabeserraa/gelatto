@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
-import { inputClass, primaryButtonClass } from '../lib/ui'
+import { inputClass, primaryButtonClass, secondaryButtonClass } from '../lib/ui'
+import { disablePush, enablePush, getCurrentSubscription, isPushSupported } from '../lib/push'
 
 const TABS = ['Perfil', 'Empresa', 'Usuários', 'Preferências', 'Integrações']
 
@@ -224,7 +225,8 @@ function PreferenciasTab() {
   if (!form) return <p className="text-sm text-slate-400 dark:text-slate-500">Carregando...</p>
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-sm space-y-4">
+    <div className="max-w-sm space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
       <h2 className="font-display text-sm font-semibold text-navy-950 dark:text-white">Preferências</h2>
       <Field label="Moeda">
         <select
@@ -264,7 +266,66 @@ function PreferenciasTab() {
         Receber notificações por e-mail
       </label>
       <SaveButton saving={saving} saved={saved} />
-    </form>
+      </form>
+
+      <PushNotificationsSection />
+    </div>
+  )
+}
+
+function PushNotificationsSection() {
+  const { user } = useAuth()
+  const [subscribed, setSubscribed] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const supported = isPushSupported()
+
+  useEffect(() => {
+    if (!supported) return
+    getCurrentSubscription().then((sub) => setSubscribed(Boolean(sub)))
+  }, [supported])
+
+  async function handleToggle() {
+    setLoading(true)
+    setError(null)
+    try {
+      if (subscribed) {
+        await disablePush()
+        setSubscribed(false)
+      } else {
+        await enablePush(user.id)
+        setSubscribed(true)
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="border-t border-slate-100 pt-4 dark:border-navy-700">
+      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Notificações no celular</p>
+      <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+        Recebe um alerta neste aparelho quando algum ponto ficar com estoque crítico — mesmo com o app fechado.
+      </p>
+      {!supported && (
+        <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+          Esse navegador/aparelho não suporta notificações push.
+        </p>
+      )}
+      {supported && (
+        <button
+          type="button"
+          onClick={handleToggle}
+          disabled={loading}
+          className={`mt-2 ${subscribed ? secondaryButtonClass : primaryButtonClass}`}
+        >
+          {loading ? 'Aguarde...' : subscribed ? 'Desativar notificações' : 'Ativar notificações'}
+        </button>
+      )}
+      {error && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>}
+    </div>
   )
 }
 
