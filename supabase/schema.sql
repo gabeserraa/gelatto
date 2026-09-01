@@ -325,8 +325,12 @@ begin
   end if;
 
   perform net.http_post(
-    url := 'https://jwrvgzzzosvwfimlmiqy.functions.supabase.co/send-critical-alert',
-    headers := jsonb_build_object('Content-Type', 'application/json', 'x-webhook-secret', v_secret),
+    url := 'https://jwrvgzzzosvwfimlmiqy.supabase.co/functions/v1/send-critical-alert',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3cnZnenp6b3N2d2ZpbWxtaXF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxNTM5MjAsImV4cCI6MjEwMzcyOTkyMH0.4qpZgMyBundI0R46sHW6GSVlNc8rCwp9xXn5bZOfX08',
+      'x-webhook-secret', v_secret
+    ),
     body := jsonb_build_object(
       'ponto_nome', v_ponto.nome,
       'estoque_atual_kg', v_ponto.estoque_atual_kg,
