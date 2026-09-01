@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { inputClass, labelClass, modalOverlayClass, modalShellClass, primaryButtonClass, secondaryButtonClass } from '../../lib/ui'
-import { formatCurrency } from '../../lib/format'
+import { formatCurrency, formatKg } from '../../lib/format'
 
 export default function VendaModal({ pontos, defaultPontoId, venda, onClose, onSaved }) {
   const isEdit = Boolean(venda)
@@ -17,6 +17,12 @@ export default function VendaModal({ pontos, defaultPontoId, venda, onClose, onS
   const prejuizo =
     precoVenda !== '' && custo !== '' && Number(precoVenda) <= Number(custo)
       ? Number(custo) - Number(precoVenda)
+      : null
+
+  const pontoSelecionado = pontos.find((p) => p.id === pontoId)
+  const excedeCapacidade =
+    quantidade !== '' && pontoSelecionado && Number(quantidade) > pontoSelecionado.capacidade_kg
+      ? pontoSelecionado.capacidade_kg
       : null
 
   useEffect(() => {
@@ -123,6 +129,12 @@ export default function VendaModal({ pontos, defaultPontoId, venda, onClose, onS
               className={inputClass}
             />
           </div>
+
+          {excedeCapacidade != null && (
+            <p className="rounded-[10px] bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+              ⚠ Essa quantidade passa da capacidade do freezer ({formatKg(excedeCapacidade)}).
+            </p>
+          )}
 
           {prejuizo != null && (
             <p className="rounded-[10px] bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">

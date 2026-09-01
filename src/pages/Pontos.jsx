@@ -1,4 +1,5 @@
 import { lazy, Suspense, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { usePontosEstoque } from '../lib/usePontosEstoque'
 import UrgencyBadge, { urgencyFromRatio } from '../components/dashboard/UrgencyBadge'
@@ -119,10 +120,12 @@ export default function Pontos() {
             return (
               <div key={p.id} className="flex flex-col rounded-card border border-slate-200 bg-white p-5 shadow-card dark:border-navy-700 dark:bg-navy-900">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="truncate font-display text-sm font-semibold text-navy-950 dark:text-white">{p.nome}</p>
+                  <Link to={`/pontos/${p.id}`} className="min-w-0">
+                    <p className="truncate font-display text-sm font-semibold text-navy-950 hover:underline dark:text-white">
+                      {p.nome}
+                    </p>
                     <p className="mt-0.5 truncate text-xs text-slate-400 dark:text-slate-500">{p.endereco}</p>
-                  </div>
+                  </Link>
                   <div className="flex shrink-0 items-center gap-2">
                     <UrgencyBadge status={p.status} />
                     <button

@@ -32,7 +32,7 @@ export default function Header({ path, onOpenMenu }) {
 
   useRealtimeRefresh(['pontos', 'movimentacoes_estoque', 'ajustes_estoque'], loadAlerts)
 
-  const title = PAGE_TITLES[path] ?? 'Gelatto ICE CO.'
+  const title = PAGE_TITLES[path] ?? (path?.startsWith('/pontos/') ? 'Detalhe do Ponto' : 'Gelatto ICE CO.')
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8 dark:border-navy-700 dark:bg-navy-900">
