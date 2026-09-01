@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { inputClass, labelClass, modalOverlayClass, modalShellClass, primaryButtonClass, secondaryButtonClass } from '../../lib/ui'
+import { enqueueOffline } from '../../lib/offlineQueue'
+import { useOnlineStatus } from '../../lib/useOnlineStatus'
 
 const TIPOS = [
   { value: 'balada', label: 'Balada' },
@@ -30,6 +32,7 @@ export default function PontoFormModal({ ponto, onClose, onSaved }) {
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const online = useOnlineStatus()
 
   function set(field) {
     return (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
@@ -50,6 +53,19 @@ export default function PontoFormModal({ ponto, onClose, onSaved }) {
       regiao: form.regiao,
       latitude: form.latitude ? Number(form.latitude) : null,
       longitude: form.longitude ? Number(form.longitude) : null,
+    }
+
+    if (!navigator.onLine) {
+      enqueueOffline({
+        table: 'pontos',
+        operation: isEdit ? 'update' : 'insert',
+        rowId: isEdit ? ponto.id : null,
+        payload,
+      })
+      setSaving(false)
+      onSaved?.()
+      onClose()
+      return
     }
 
     const { error } = isEdit
@@ -73,6 +89,12 @@ export default function PontoFormModal({ ponto, onClose, onSaved }) {
         </h2>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          {!online && (
+            <p className="rounded-[10px] bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 dark:bg-navy-800 dark:text-slate-300">
+              📴 Sem conexão — vai salvar localmente e enviar sozinho quando a internet voltar.
+            </p>
+          )}
+
           <div>
             <label className={labelClass}>Nome</label>
             <input required value={form.nome} onChange={set('nome')} className={inputClass} />

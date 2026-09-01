@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 import { useRealtimeRefresh } from '../lib/useRealtimeRefresh'
+import { useOfflineQueue } from '../lib/useOfflineQueue'
 import { IconBell, IconLogout, IconMenu } from './icons'
 
 const PAGE_TITLES = {
@@ -18,6 +19,7 @@ export default function Header({ path, onOpenMenu }) {
   const { signOut } = useAuth()
   const [open, setOpen] = useState(false)
   const [alerts, setAlerts] = useState([])
+  const pendingSync = useOfflineQueue()
 
   const loadAlerts = useCallback(async () => {
     const { data } = await supabase.from('v_pontos_estoque').select('id, nome, estoque_atual_kg, capacidade_kg')
@@ -51,6 +53,12 @@ export default function Header({ path, onOpenMenu }) {
       </div>
 
       <div className="flex items-center gap-4">
+        {pendingSync > 0 && (
+          <span className="hidden items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-700 sm:inline-flex dark:bg-amber-500/15 dark:text-amber-400">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
+            {pendingSync} pendente{pendingSync > 1 ? 's' : ''} pra sincronizar
+          </span>
+        )}
         <div className="relative">
           <button
             onClick={() => setOpen((v) => !v)}

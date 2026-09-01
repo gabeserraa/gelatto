@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { inputClass, labelClass, modalOverlayClass, modalShellClass, primaryButtonClass, secondaryButtonClass } from '../../lib/ui'
 import { formatCurrency, formatKg } from '../../lib/format'
+import { enqueueOffline } from '../../lib/offlineQueue'
+import { useOnlineStatus } from '../../lib/useOnlineStatus'
 
 export default function VendaModal({ pontos, defaultPontoId, venda, onClose, onSaved }) {
   const isEdit = Boolean(venda)
@@ -13,6 +15,7 @@ export default function VendaModal({ pontos, defaultPontoId, venda, onClose, onS
   const [observacao, setObservacao] = useState(venda?.observacao ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const online = useOnlineStatus()
 
   const prejuizo =
     precoVenda !== '' && custo !== '' && Number(precoVenda) <= Number(custo)
@@ -63,6 +66,19 @@ export default function VendaModal({ pontos, defaultPontoId, venda, onClose, onS
       observacao: observacao || null,
     }
 
+    if (!navigator.onLine) {
+      enqueueOffline({
+        table: 'movimentacoes_estoque',
+        operation: isEdit ? 'update' : 'insert',
+        rowId: isEdit ? venda.id : null,
+        payload,
+      })
+      setSaving(false)
+      onSaved?.()
+      onClose()
+      return
+    }
+
     const { error } = isEdit
       ? await supabase.from('movimentacoes_estoque').update(payload).eq('id', venda.id)
       : await supabase.from('movimentacoes_estoque').insert(payload)
@@ -84,6 +100,12 @@ export default function VendaModal({ pontos, defaultPontoId, venda, onClose, onS
         </h2>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          {!online && (
+            <p className="rounded-[10px] bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 dark:bg-navy-800 dark:text-slate-300">
+              📴 Sem conexão — vai salvar localmente e enviar sozinho quando a internet voltar.
+            </p>
+          )}
+
           <div>
             <label className={labelClass}>Ponto</label>
             <select required value={pontoId} onChange={(e) => setPontoId(e.target.value)} className={inputClass}>
