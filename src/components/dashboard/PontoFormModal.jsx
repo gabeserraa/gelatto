@@ -3,6 +3,8 @@ import { supabase } from '../../lib/supabaseClient'
 import { inputClass, labelClass, modalOverlayClass, modalShellClass, primaryButtonClass, secondaryButtonClass } from '../../lib/ui'
 import { enqueueOffline } from '../../lib/offlineQueue'
 import { useOnlineStatus } from '../../lib/useOnlineStatus'
+import { geocodeAddress } from '../../lib/geocode'
+import { IconSearch } from '../icons'
 
 const TIPOS = [
   { value: 'balada', label: 'Balada' },
@@ -32,10 +34,32 @@ export default function PontoFormModal({ ponto, onClose, onSaved }) {
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [geocoding, setGeocoding] = useState(false)
+  const [geocodeMsg, setGeocodeMsg] = useState(null)
   const online = useOnlineStatus()
 
   function set(field) {
     return (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
+  }
+
+  async function handleGeocode() {
+    if (!form.endereco.trim()) return
+    setGeocoding(true)
+    setGeocodeMsg(null)
+    try {
+      const query = form.regiao ? `${form.endereco}, ${form.regiao}` : form.endereco
+      const result = await geocodeAddress(query)
+      if (!result) {
+        setGeocodeMsg('Endereço não encontrado — pode preencher latitude/longitude na mão.')
+        return
+      }
+      setForm((f) => ({ ...f, latitude: result.latitude, longitude: result.longitude }))
+      setGeocodeMsg('Coordenadas preenchidas — confere se o pino ficou no lugar certo.')
+    } catch {
+      setGeocodeMsg('Não foi possível buscar agora. Tenta de novo ou preenche na mão.')
+    } finally {
+      setGeocoding(false)
+    }
   }
 
   async function handleSubmit(e) {
@@ -158,6 +182,19 @@ export default function PontoFormModal({ ponto, onClose, onSaved }) {
                 className={inputClass}
               />
             </div>
+          </div>
+
+          <div>
+            <button
+              type="button"
+              onClick={handleGeocode}
+              disabled={geocoding || !form.endereco.trim()}
+              className="flex items-center gap-1.5 rounded-[10px] border border-slate-200 px-3 py-2 text-xs font-semibold text-navy-950 hover:bg-slate-50 disabled:opacity-60 dark:border-navy-700 dark:text-white dark:hover:bg-navy-800"
+            >
+              <IconSearch className="h-3.5 w-3.5" />
+              {geocoding ? 'Buscando...' : 'Buscar coordenadas pelo endereço'}
+            </button>
+            {geocodeMsg && <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">{geocodeMsg}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
