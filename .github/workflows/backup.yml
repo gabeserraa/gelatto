@@ -25,7 +25,7 @@ jobs:
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
-          pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges --format=custom \
+          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges --format=custom \
             -f "gelatto-backup-$(date +%Y-%m-%d).dump"
 
       - name: Publicar como artifact
