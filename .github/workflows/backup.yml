@@ -1,0 +1,28 @@
+name: Backup do banco de dados
+
+on:
+  schedule:
+    # 06:00 UTC = 03:00 em Brasília (horário de menor uso do sistema).
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instalar cliente do Postgres
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Gerar dump do banco
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges --format=custom \
+            -f "gelatto-backup-$(date +%Y-%m-%d).dump"
+
+      - name: Publicar como artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gelatto-backup-${{ github.run_id }}
+          path: gelatto-backup-*.dump
+          retention-days: 90

@@ -29,6 +29,26 @@ export default function VendaModal({ pontos, defaultPontoId, venda, onClose, onS
     if (defaultPontoId) setPontoId(defaultPontoId)
   }, [defaultPontoId])
 
+  // Pre-fill preço/custo com o último lançamento desse ponto, só ao criar
+  // (edição já vem com os valores reais do registro) — agiliza o
+  // preenchimento, já que o preço costuma repetir de venda pra venda.
+  useEffect(() => {
+    if (isEdit || !pontoId) return
+    supabase
+      .from('movimentacoes_estoque')
+      .select('preco_venda_kg, custo_kg')
+      .eq('ponto_id', pontoId)
+      .order('data', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data: ultima }) => {
+        if (!ultima) return
+        setPrecoVenda((current) => (current === '' ? ultima.preco_venda_kg : current))
+        setCusto((current) => (current === '' ? ultima.custo_kg : current))
+      })
+  }, [pontoId, isEdit])
+
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)

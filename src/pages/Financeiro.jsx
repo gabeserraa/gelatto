@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Bar,
   BarChart,
@@ -16,7 +16,9 @@ import { supabase } from '../lib/supabaseClient'
 import { useTheme } from '../contexts/ThemeContext'
 import StatCard from '../components/dashboard/StatCard'
 import ChartCard from '../components/dashboard/ChartCard'
-import { formatCurrency, formatPercent, monthLabel, pctChange } from '../lib/format'
+import { formatCurrency, formatKg, formatPercent, monthLabel, pctChange } from '../lib/format'
+import { tableCardClass, tableHeaderRowClass, tbodyClass, thClass, theadClass } from '../lib/ui'
+import { useRealtimeRefresh } from '../lib/useRealtimeRefresh'
 
 const TIPO_COLORS = ['#06b6d4', '#0891b2', '#0e7490', '#155e75', '#164e63', '#0f2f3a']
 
@@ -26,15 +28,21 @@ export default function Financeiro() {
   const gridColor = theme === 'escuro' ? '#1c304a' : '#e2e8f0'
   const [mensal, setMensal] = useState([])
   const [ranking, setRanking] = useState([])
+  const [comparativo, setComparativo] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    async function load() {
-      const [{ data: mensalData }, { data: rankingData }, { data: pontosData }] = await Promise.all([
-        supabase.from('v_financeiro_mensal').select('*').order('mes', { ascending: false }).limit(6),
-        supabase.from('v_lucro_por_ponto').select('*'),
-        supabase.from('pontos').select('id, nome'),
-      ])
+  const load = useCallback(async () => {
+      const inicioMes = new Date()
+      inicioMes.setDate(1)
+      const inicioMesStr = inicioMes.toISOString().slice(0, 10)
+
+      const [{ data: mensalData }, { data: rankingData }, { data: pontosData }, { data: vendasMes }] =
+        await Promise.all([
+          supabase.from('v_financeiro_mensal').select('*').order('mes', { ascending: false }).limit(6),
+          supabase.from('v_lucro_por_ponto').select('*'),
+          supabase.from('v_pontos_estoque').select('id, nome, capacidade_kg, estoque_atual_kg'),
+          supabase.from('movimentacoes_estoque').select('ponto_id, quantidade_kg').gte('data', inicioMesStr),
+        ])
 
       setMensal((mensalData ?? []).slice().reverse())
 
@@ -47,10 +55,32 @@ export default function Financeiro() {
         }))
         .sort((a, b) => b.lucro - a.lucro)
       setRanking(rows)
+
+      const lucroMesPorPonto = Object.fromEntries((rankingData ?? []).map((r) => [r.ponto_id, r.lucro_mes_atual ?? 0]))
+      const consumoPorPonto = {}
+      for (const v of vendasMes ?? []) {
+        consumoPorPonto[v.ponto_id] = (consumoPorPonto[v.ponto_id] ?? 0) + v.quantidade_kg
+      }
+      const comparativoRows = (pontosData ?? [])
+        .map((p) => ({
+          id: p.id,
+          nome: p.nome,
+          estoqueAtual: p.estoque_atual_kg,
+          consumoMes: consumoPorPonto[p.id] ?? 0,
+          giro: p.capacidade_kg > 0 ? ((consumoPorPonto[p.id] ?? 0) / p.capacidade_kg) * 100 : 0,
+          lucroMes: lucroMesPorPonto[p.id] ?? 0,
+        }))
+        .sort((a, b) => b.consumoMes - a.consumoMes)
+      setComparativo(comparativoRows)
+
       setLoading(false)
-    }
-    load()
   }, [])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  useRealtimeRefresh(['movimentacoes_estoque', 'ajustes_estoque', 'pontos'], load)
 
   const [mesAtual, mesAnterior] = useMemo(() => [...mensal].reverse(), [mensal])
 
@@ -142,6 +172,44 @@ export default function Financeiro() {
               </div>
             ))}
         </div>
+      </div>
+
+      <div className={tableCardClass}>
+        <div className={tableHeaderRowClass}>
+          <h3 className="font-display text-sm font-semibold text-navy-950 dark:text-white">Comparativo entre Pontos</h3>
+        </div>
+        <table className="w-full text-left text-sm">
+          <thead className={theadClass}>
+            <tr>
+              {['Ponto', 'Estoque atual', 'Consumo do mês', 'Giro', 'Lucro do mês'].map((h) => (
+                <th key={h} className={thClass}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className={tbodyClass}>
+            {loading && (
+              <tr>
+                <td colSpan={5} className="px-4 py-6 text-center text-slate-400 dark:text-slate-500">
+                  Carregando...
+                </td>
+              </tr>
+            )}
+            {!loading &&
+              comparativo.map((c) => (
+                <tr key={c.id}>
+                  <td className="px-4 py-3 font-medium text-navy-950 dark:text-white">{c.nome}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{formatKg(c.estoqueAtual)}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{formatKg(c.consumoMes)}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{formatPercent(c.giro)}</td>
+                  <td className="px-4 py-3 font-medium text-emerald-700 dark:text-emerald-400">
+                    {formatCurrency(c.lucroMes)}
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )
