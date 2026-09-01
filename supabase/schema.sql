@@ -16,6 +16,9 @@ create table if not exists pontos (
   status text not null default 'ativo' check (status in ('ativo', 'inativo', 'manutencao')),
   latitude numeric,
   longitude numeric,
+  -- Meta mensal opcional (kg) — so faz sentido pra alguns pontos (ex:
+  -- baladas com meta combinada), fica null pros demais.
+  meta_mensal_kg numeric check (meta_mensal_kg is null or meta_mensal_kg > 0),
   created_at timestamptz not null default now()
 );
 
@@ -114,7 +117,8 @@ select
   case when p.consumo_medio_dia > 0
     then round(greatest(coalesce(v.estoque_kg, 0) + coalesce(a.ajustes_kg, 0), 0) / p.consumo_medio_dia, 1)
     else null
-  end as previsao_esgotamento_dias
+  end as previsao_esgotamento_dias,
+  coalesce(m2.vendido_mes_kg, 0) as vendido_mes_kg
 from pontos p
 left join (
   select
@@ -133,7 +137,13 @@ left join (
   select ponto_id, sum(quantidade_kg) as ajustes_kg, max(data) as ultimo_ajuste
   from ajustes_estoque
   group by ponto_id
-) a on a.ponto_id = p.id;
+) a on a.ponto_id = p.id
+left join (
+  select ponto_id, sum(quantidade_kg) as vendido_mes_kg
+  from movimentacoes_estoque
+  where date_trunc('month', data) = date_trunc('month', current_date)
+  group by ponto_id
+) m2 on m2.ponto_id = p.id;
 
 -- Cada venda ja tem receita/custo/lucro/margem direto nos seus proprios campos.
 create or replace view v_movimentacoes_margem as

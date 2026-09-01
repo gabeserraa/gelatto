@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient'
 import { usePontosEstoque } from '../lib/usePontosEstoque'
 import UrgencyBadge, { urgencyFromRatio } from '../components/dashboard/UrgencyBadge'
 import ProgressBar from '../components/dashboard/ProgressBar'
+import GoalProgressBar from '../components/dashboard/GoalProgressBar'
 import VendaModal from '../components/dashboard/VendaModal'
 import PontoFormModal from '../components/dashboard/PontoFormModal'
 import AjusteEstoqueModal from '../components/dashboard/AjusteEstoqueModal'
@@ -169,6 +170,20 @@ export default function Pontos() {
                       : 'sem previsão'}
                   </span>
                 </div>
+
+                {p.meta_mensal_kg > 0 && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500 dark:text-slate-400">Meta do mês</span>
+                      <span className="font-medium text-navy-950 dark:text-white">
+                        {formatKg(p.vendido_mes_kg)} de {formatKg(p.meta_mensal_kg)}
+                      </span>
+                    </div>
+                    <div className="mt-1.5">
+                      <GoalProgressBar ratio={p.vendido_mes_kg / p.meta_mensal_kg} />
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-4 flex gap-2">
                   <button

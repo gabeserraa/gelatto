@@ -31,6 +31,7 @@ export default function PontoFormModal({ ponto, onClose, onSaved }) {
     regiao: ponto?.regiao ?? '',
     latitude: ponto?.latitude ?? '',
     longitude: ponto?.longitude ?? '',
+    meta_mensal_kg: ponto?.meta_mensal_kg ?? '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -77,6 +78,7 @@ export default function PontoFormModal({ ponto, onClose, onSaved }) {
       regiao: form.regiao,
       latitude: form.latitude ? Number(form.latitude) : null,
       longitude: form.longitude ? Number(form.longitude) : null,
+      meta_mensal_kg: form.meta_mensal_kg ? Number(form.meta_mensal_kg) : null,
     }
 
     if (!navigator.onLine) {
@@ -182,6 +184,19 @@ export default function PontoFormModal({ ponto, onClose, onSaved }) {
                 className={inputClass}
               />
             </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>Meta mensal (kg, opcional)</label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              placeholder="Ex: 100 — deixa em branco se não tiver meta"
+              value={form.meta_mensal_kg}
+              onChange={set('meta_mensal_kg')}
+              className={inputClass}
+            />
           </div>
 
           <div>
