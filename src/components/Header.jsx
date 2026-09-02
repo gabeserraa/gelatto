@@ -11,6 +11,7 @@ const PAGE_TITLES = {
   '/estoque': 'Estoque',
   '/fabrica': 'Estoque da Fábrica',
   '/financeiro': 'Financeiro & Lucro',
+  '/despesas': 'Despesas',
   '/relatorios': 'Relatórios',
   '/configuracoes': 'Configurações',
 }

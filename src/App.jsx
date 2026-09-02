@@ -11,6 +11,7 @@ const PontoDetalhe = lazy(() => import('./pages/PontoDetalhe'))
 const Estoque = lazy(() => import('./pages/Estoque'))
 const Fabrica = lazy(() => import('./pages/Fabrica'))
 const Financeiro = lazy(() => import('./pages/Financeiro'))
+const Despesas = lazy(() => import('./pages/Despesas'))
 const Relatorios = lazy(() => import('./pages/Relatorios'))
 const Configuracoes = lazy(() => import('./pages/Configuracoes'))
 
@@ -47,6 +48,7 @@ function AppRoutes() {
                   <Route path="/estoque" element={<Estoque />} />
                   <Route path="/fabrica" element={<Fabrica />} />
                   <Route path="/financeiro" element={<Financeiro />} />
+                  <Route path="/despesas" element={<Despesas />} />
                   <Route path="/relatorios" element={<Relatorios />} />
                   <Route path="/configuracoes" element={<Configuracoes />} />
                   <Route path="*" element={<Navigate to="/" replace />} />

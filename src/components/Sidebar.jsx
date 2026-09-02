@@ -6,6 +6,7 @@ import {
   IconBox,
   IconFactory,
   IconChart,
+  IconWallet,
   IconFile,
   IconSettings,
   IconX,
@@ -17,6 +18,7 @@ const NAV_ITEMS = [
   { to: '/estoque', label: 'Estoque', icon: IconBox },
   { to: '/fabrica', label: 'Estoque da Fábrica', icon: IconFactory },
   { to: '/financeiro', label: 'Financeiro & Lucro', icon: IconChart },
+  { to: '/despesas', label: 'Despesas', icon: IconWallet },
   { to: '/relatorios', label: 'Relatórios', icon: IconFile },
   { to: '/configuracoes', label: 'Configurações', icon: IconSettings },
 ]

@@ -104,6 +104,16 @@ export function IconX(props) {
   )
 }
 
+export function IconWallet(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5Z" />
+      <path d="M16 12h.01" />
+      <path d="M21 12h-5a2 2 0 0 0 0 4h5v-4Z" />
+    </svg>
+  )
+}
+
 export function IconFactory(props) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
