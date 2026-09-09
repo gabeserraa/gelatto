@@ -41,7 +41,7 @@ export default function Relatorios() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3 rounded-card border border-slate-200 bg-white p-4 shadow-card dark:border-navy-700 dark:bg-navy-900">
+      <div className="flex flex-wrap items-center gap-3 rounded-card border-2 border-slate-300 bg-white p-4 shadow-card dark:border-navy-600 dark:bg-navy-800">
         <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Período</span>
         <input
           type="date"
@@ -60,7 +60,7 @@ export default function Relatorios() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {Object.entries(REPORT_TYPES).map(([tipo, config]) => (
-          <div key={tipo} className="rounded-card border border-slate-200 bg-white p-5 shadow-card dark:border-navy-700 dark:bg-navy-900">
+          <div key={tipo} className="rounded-card border-2 border-slate-300 bg-white p-5 shadow-card dark:border-navy-600 dark:bg-navy-800">
             <div className="flex items-start gap-3">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-500/[0.13]">
                 <IconFile className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
@@ -90,7 +90,7 @@ export default function Relatorios() {
         ))}
       </div>
 
-      <div className="rounded-card border border-slate-200 bg-white shadow-card dark:border-navy-700 dark:bg-navy-900">
+      <div className="rounded-card border-2 border-slate-300 bg-white shadow-card dark:border-navy-600 dark:bg-navy-800">
         <div className="border-b border-slate-100 px-5 py-4 dark:border-navy-700">
           <h3 className="font-display text-sm font-semibold text-navy-950 dark:text-white">Últimos Relatórios Gerados</h3>
         </div>

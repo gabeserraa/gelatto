@@ -183,7 +183,7 @@ export default function PontoDetalhe() {
         />
       </div>
 
-      <div className="rounded-card border border-slate-200 bg-white p-5 shadow-card dark:border-navy-700 dark:bg-navy-900">
+      <div className="rounded-card border-2 border-slate-300 bg-white p-5 shadow-card dark:border-navy-600 dark:bg-navy-800">
         <div className="flex items-center justify-between">
           <UrgencyBadge status={urgency} />
           <span className="text-xs text-slate-400 dark:text-slate-500">

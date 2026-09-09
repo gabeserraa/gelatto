@@ -21,7 +21,7 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 dark:bg-navy-950">
-      <div className="w-full max-w-sm rounded-card border border-slate-200 bg-white p-8 shadow-card dark:border-navy-700 dark:bg-navy-900">
+      <div className="w-full max-w-sm rounded-card border-2 border-slate-300 bg-white p-8 shadow-card dark:border-navy-600 dark:bg-navy-800">
         <div className="mb-6 flex flex-col items-center gap-2">
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500/[0.13]">
             <IconSnowflake className="h-6 w-6 text-cyan-600 dark:text-cyan-400" />

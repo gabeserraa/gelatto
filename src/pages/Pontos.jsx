@@ -119,7 +119,7 @@ export default function Pontos() {
             const ratio = p.estoque_atual_kg / p.capacidade_kg
             const urgency = urgencyFromRatio(p.estoque_atual_kg, p.consumo_medio_dia)
             return (
-              <div key={p.id} className="flex flex-col rounded-card border border-slate-200 bg-white p-5 shadow-card dark:border-navy-700 dark:bg-navy-900">
+              <div key={p.id} className="flex flex-col rounded-card border-2 border-slate-300 bg-white p-5 shadow-card dark:border-navy-600 dark:bg-navy-800">
                 <div className="flex items-start justify-between gap-2">
                   <Link to={`/pontos/${p.id}`} className="min-w-0">
                     <p className="truncate font-display text-sm font-semibold text-navy-950 hover:underline dark:text-white">

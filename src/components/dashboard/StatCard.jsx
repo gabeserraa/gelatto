@@ -8,7 +8,7 @@ export default function StatCard({ label, value, hint, trend }) {
   const trendLabel = trend != null ? `${trend > 0 ? '+' : ''}${trend.toFixed(1)}%` : null
 
   return (
-    <div className="rounded-card border border-slate-200 bg-white p-5 shadow-card dark:border-navy-700 dark:bg-navy-900">
+    <div className="rounded-card border-2 border-slate-300 bg-white p-5 shadow-card dark:border-navy-600 dark:bg-navy-800">
       <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">{label}</p>
       <p className="mt-2 font-display text-[28px] font-bold leading-none text-navy-950 dark:text-white">{value}</p>
       <div className="mt-2 flex items-center gap-2">

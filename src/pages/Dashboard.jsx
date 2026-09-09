@@ -7,6 +7,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import StatCard from '../components/dashboard/StatCard'
 import ChartCard from '../components/dashboard/ChartCard'
 import { formatCurrency, formatCurrencyCompact, formatKg, pctChange } from '../lib/format'
+import { tableCardClass, tableHeaderRowClass } from '../lib/ui'
 
 const TIPO_LABELS = { balada: 'Balada', mercado: 'Mercado', evento: 'Evento', bar: 'Bar' }
 const TIPO_COLORS = ['#06b6d4', '#0891b2', '#0e7490', '#155e75']
@@ -17,12 +18,6 @@ function formatUltimaAtualizacao(ts) {
   if (!ts) return 'sem movimentações ainda'
   const d = new Date(ts)
   return `atualizado em ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
-}
-
-function heatColor(value, min, max) {
-  if (max === min) return 'hsl(45, 70%, 42%)'
-  const t = (value - min) / (max - min)
-  return `hsl(${Math.round(t * 120)}, 72%, 42%)`
 }
 
 export default function Dashboard() {
@@ -135,10 +130,6 @@ export default function Dashboard() {
 
   const periodoLabel = selectedMonth != null ? `${MESES_ABREV[selectedMonth]}/${ANO_TABELA}` : 'Total Geral'
 
-  const receitasDoAno = monthlyData.map((m) => m.receita)
-  const minReceita = Math.min(...receitasDoAno)
-  const maxReceita = Math.max(...receitasDoAno)
-
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -161,51 +152,44 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="overflow-hidden rounded-card border border-navy-800 bg-navy-950 shadow-card">
-        <div className="border-b border-navy-800 px-5 py-4 text-center">
-          <h3 className="font-display text-sm font-semibold text-white">Faturamento Anual</h3>
-          <p className="mt-0.5 text-xs text-slate-400">
+      <div className={tableCardClass}>
+        <div className={tableHeaderRowClass}>
+          <h3 className="font-display text-sm font-semibold text-navy-950 dark:text-white">
+            Faturamento por Mês — {ANO_TABELA}
+          </h3>
+          <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
             Clica num mês pra ver o faturamento por cliente e o lucro só daquele período.
           </p>
         </div>
-        <div className="overflow-x-auto">
-          <div
-            className="grid divide-x divide-navy-800"
-            style={{ gridTemplateColumns: `84px repeat(12, minmax(96px, 1fr))` }}
-          >
-            <div className="px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              Ano
-            </div>
-            {monthlyData.map((m) => (
-              <div
-                key={m.mes}
-                className="px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500"
-              >
+        <div className="grid grid-cols-12 divide-x divide-slate-100 dark:divide-navy-700">
+          {monthlyData.map((m) => (
+            <button
+              key={m.mes}
+              onClick={() => setSelectedMonth((cur) => (cur === m.mes ? null : m.mes))}
+              className={`flex flex-col items-center gap-1 px-1 py-3 transition-colors ${
+                selectedMonth === m.mes
+                  ? 'bg-cyan-50 dark:bg-cyan-500/10'
+                  : 'hover:bg-slate-50 dark:hover:bg-navy-800'
+              }`}
+            >
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                 {m.label}
-              </div>
-            ))}
-            <div className="flex items-center justify-center bg-navy-800 px-2 py-4 text-sm font-bold text-white">
-              {ANO_TABELA}
-            </div>
-            {monthlyData.map((m) => (
-              <button
-                key={m.mes}
-                onClick={() => setSelectedMonth((cur) => (cur === m.mes ? null : m.mes))}
-                style={{ backgroundColor: heatColor(m.receita, minReceita, maxReceita) }}
-                className={`flex items-center justify-center px-2 py-4 text-sm font-bold text-white transition ${
-                  selectedMonth === m.mes ? 'ring-2 ring-inset ring-white' : 'hover:brightness-110'
+              </span>
+              <span
+                className={`text-[11px] font-semibold sm:text-xs ${
+                  selectedMonth === m.mes ? 'text-cyan-700 dark:text-cyan-400' : 'text-navy-950 dark:text-white'
                 }`}
               >
-                {formatCurrency(m.receita)}
-              </button>
-            ))}
-          </div>
+                {formatCurrencyCompact(m.receita)}
+              </span>
+            </button>
+          ))}
         </div>
         {selectedMonth != null && (
-          <div className="border-t border-navy-800 px-5 py-3 text-center">
+          <div className="border-t border-slate-100 px-5 py-3 dark:border-navy-700">
             <button
               onClick={() => setSelectedMonth(null)}
-              className="text-xs font-medium text-cyan-400 hover:underline"
+              className="text-xs font-medium text-cyan-600 hover:underline dark:text-cyan-400"
             >
               ← Limpar seleção (voltar pro total geral)
             </button>

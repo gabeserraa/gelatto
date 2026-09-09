@@ -72,7 +72,7 @@ export default function Header({ path, onOpenMenu }) {
             )}
           </button>
           {open && (
-            <div className="absolute right-0 mt-2 w-72 rounded-card border border-slate-200 bg-white shadow-card dark:border-navy-700 dark:bg-navy-900">
+            <div className="absolute right-0 mt-2 w-72 rounded-card border-2 border-slate-300 bg-white shadow-card dark:border-navy-600 dark:bg-navy-800">
               <div className="border-b border-slate-100 px-4 py-3 dark:border-navy-700">
                 <p className="font-display text-sm font-semibold text-navy-950 dark:text-white">Notificações</p>
               </div>

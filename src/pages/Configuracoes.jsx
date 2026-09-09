@@ -28,7 +28,7 @@ export default function Configuracoes() {
         ))}
       </nav>
 
-      <div className="flex-1 rounded-card border border-slate-200 bg-white p-6 shadow-card dark:border-navy-700 dark:bg-navy-900">
+      <div className="flex-1 rounded-card border-2 border-slate-300 bg-white p-6 shadow-card dark:border-navy-600 dark:bg-navy-800">
         {tab === 'Perfil' && <PerfilTab />}
         {tab === 'Empresa' && <EmpresaTab />}
         {tab === 'Usuários' && <UsuariosTab />}
