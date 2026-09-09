@@ -14,7 +14,8 @@ import {
 
 const NAV_ITEMS = [
   { to: '/', label: 'Visão Geral', icon: IconHome, end: true },
-  { to: '/pontos', label: 'Pontos de Freezer', icon: IconSnowflake },
+  // Removida do menu por enquanto a pedido do Gabriel — rota e codigo continuam intactos.
+  // { to: '/pontos', label: 'Pontos de Freezer', icon: IconSnowflake },
   { to: '/estoque', label: 'Estoque', icon: IconBox },
   { to: '/fabrica', label: 'Estoque da Fábrica', icon: IconFactory },
   { to: '/financeiro', label: 'Financeiro & Lucro', icon: IconChart },
