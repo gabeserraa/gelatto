@@ -39,7 +39,7 @@ export default function Dashboard() {
   const load = useCallback(async () => {
     setLoading(true)
     const [{ data: margemData }, { data: fabricaData }] = await Promise.all([
-      supabase.from('v_movimentacoes_margem').select('data, ponto_id, receita, custo, lucro'),
+      supabase.from('v_movimentacoes_margem').select('data, ponto_id, quantidade_kg, receita, custo, lucro'),
       supabase.from('v_estoque_fabrica').select('*').maybeSingle(),
     ])
     setMargem(margemData ?? [])
@@ -54,6 +54,7 @@ export default function Dashboard() {
   useRealtimeRefresh(['movimentacoes_estoque', 'movimentacoes_fabrica'], load)
 
   const nomesPorPonto = useMemo(() => Object.fromEntries(pontos.map((p) => [p.id, p.nome])), [pontos])
+  const tipoPorPonto = useMemo(() => Object.fromEntries(pontos.map((p) => [p.id, p.tipo])), [pontos])
 
   const monthlyData = useMemo(() => {
     const arr = MESES_ABREV.map((label, i) => ({ mes: i, label, receita: 0 }))
@@ -120,15 +121,17 @@ export default function Dashboard() {
 
   const consumoPorTipo = useMemo(() => {
     const byTipo = {}
-    for (const p of pontos) {
-      byTipo[p.tipo] ??= 0
-      byTipo[p.tipo] += Math.max(0, p.capacidade_kg - p.estoque_atual_kg)
+    for (const row of filteredRows) {
+      const tipo = tipoPorPonto[row.ponto_id]
+      if (!tipo) continue
+      byTipo[tipo] ??= 0
+      byTipo[tipo] += row.quantidade_kg
     }
     return Object.entries(byTipo).map(([tipo, value]) => ({
       name: TIPO_LABELS[tipo] ?? tipo,
       value,
     }))
-  }, [pontos])
+  }, [filteredRows, tipoPorPonto])
 
   const periodoLabel = selectedMonth != null ? `${MESES_ABREV[selectedMonth]}/${ANO_TABELA}` : 'Total Geral'
 
@@ -260,7 +263,7 @@ export default function Dashboard() {
           </div>
         </ChartCard>
 
-        <ChartCard title="Consumo por Tipo de Ponto">
+        <ChartCard title={`Consumo por Tipo de Ponto — ${periodoLabel}`}>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
