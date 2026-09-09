@@ -2,6 +2,15 @@ export function formatCurrency(value) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value ?? 0)
 }
 
+export function formatCurrencyCompact(value) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value ?? 0)
+}
+
 export function formatKg(value) {
   return `${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(value ?? 0)} kg`
 }

@@ -182,7 +182,8 @@ select
   greatest(
     (select max(data) from movimentacoes_fabrica where tipo = 'entrada'),
     (select max(data) from movimentacoes_fabrica where tipo = 'saida')
-  ) as ultimo_movimento;
+  ) as ultimo_movimento,
+  (select max(created_at) from movimentacoes_fabrica) as ultima_atualizacao;
 
 -- Ranking de lucro por ponto no mês corrente vs mês anterior.
 create or replace view v_lucro_por_ponto as

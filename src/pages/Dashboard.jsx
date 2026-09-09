@@ -1,76 +1,117 @@
-import { useEffect, useMemo, useState } from 'react'
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { supabase } from '../lib/supabaseClient'
 import { usePontosEstoque } from '../lib/usePontosEstoque'
+import { useRealtimeRefresh } from '../lib/useRealtimeRefresh'
 import { useTheme } from '../contexts/ThemeContext'
 import StatCard from '../components/dashboard/StatCard'
 import ChartCard from '../components/dashboard/ChartCard'
-import UrgencyBadge, { urgencyFromRatio } from '../components/dashboard/UrgencyBadge'
-import ProgressBar from '../components/dashboard/ProgressBar'
-import VendaModal from '../components/dashboard/VendaModal'
-import { formatCurrency, formatKg, pctChange } from '../lib/format'
+import { formatCurrency, formatCurrencyCompact, formatKg, pctChange } from '../lib/format'
+import { tableCardClass, tableHeaderRowClass } from '../lib/ui'
 
 const TIPO_LABELS = { balada: 'Balada', mercado: 'Mercado', evento: 'Evento', bar: 'Bar' }
 const TIPO_COLORS = ['#06b6d4', '#0891b2', '#0e7490', '#155e75']
+const MESES_ABREV = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ']
+const ANO_TABELA = 2026
+
+function formatUltimaAtualizacao(ts) {
+  if (!ts) return 'sem movimentações ainda'
+  const d = new Date(ts)
+  return `atualizado em ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
+}
 
 export default function Dashboard() {
-  const { pontos, loading, refresh } = usePontosEstoque()
+  const { pontos } = usePontosEstoque()
   const { theme } = useTheme()
   const axisColor = theme === 'escuro' ? '#64748b' : '#94a3b8'
   const gridColor = theme === 'escuro' ? '#1c304a' : '#e2e8f0'
-  const [mensal, setMensal] = useState([])
-  const [dailySeries, setDailySeries] = useState([])
-  const [modalPontoId, setModalPontoId] = useState(null)
 
-  useEffect(() => {
-    supabase
-      .from('v_financeiro_mensal')
-      .select('*')
-      .order('mes', { ascending: false })
-      .limit(2)
-      .then(({ data }) => setMensal(data ?? []))
+  const [margem, setMargem] = useState([])
+  const [fabrica, setFabrica] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [selectedMonth, setSelectedMonth] = useState(null)
 
-    const since = new Date()
-    since.setDate(since.getDate() - 30)
-    supabase
-      .from('v_movimentacoes_margem')
-      .select('data, receita, custo')
-      .gte('data', since.toISOString().slice(0, 10))
-      .then(({ data }) => {
-        const byDay = {}
-        for (const row of data ?? []) {
-          byDay[row.data] ??= { data: row.data, receita: 0, custo: 0 }
-          byDay[row.data].receita += row.receita
-          byDay[row.data].custo += row.custo
-        }
-        setDailySeries(Object.values(byDay).sort((a, b) => a.data.localeCompare(b.data)))
-      })
+  const load = useCallback(async () => {
+    setLoading(true)
+    const [{ data: margemData }, { data: fabricaData }] = await Promise.all([
+      supabase.from('v_movimentacoes_margem').select('data, ponto_id, receita, custo, lucro'),
+      supabase.from('v_estoque_fabrica').select('*').maybeSingle(),
+    ])
+    setMargem(margemData ?? [])
+    setFabrica(fabricaData)
+    setLoading(false)
   }, [])
 
-  const [mesAtual, mesAnterior] = mensal
+  useEffect(() => {
+    load()
+  }, [load])
 
-  const kpis = useMemo(() => {
-    const pontosAtivos = pontos.filter((p) => p.status === 'ativo').length
-    return {
-      receita: mesAtual?.receita ?? 0,
-      receitaTrend: pctChange(mesAtual?.receita, mesAnterior?.receita),
-      lucro: mesAtual?.lucro ?? 0,
-      lucroTrend: pctChange(mesAtual?.lucro, mesAnterior?.lucro),
-      pontosAtivos,
+  useRealtimeRefresh(['movimentacoes_estoque', 'movimentacoes_fabrica'], load)
+
+  const nomesPorPonto = useMemo(() => Object.fromEntries(pontos.map((p) => [p.id, p.nome])), [pontos])
+
+  const monthlyData = useMemo(() => {
+    const arr = MESES_ABREV.map((label, i) => ({ mes: i, label, receita: 0 }))
+    for (const row of margem) {
+      const [y, m] = row.data.split('-')
+      if (Number(y) !== ANO_TABELA) continue
+      arr[Number(m) - 1].receita += row.receita
     }
-  }, [pontos, mesAtual, mesAnterior])
+    return arr
+  }, [margem])
+
+  const monthlyTotalsAll = useMemo(() => {
+    const map = {}
+    for (const row of margem) {
+      const key = row.data.slice(0, 7)
+      map[key] ??= { receita: 0, lucro: 0 }
+      map[key].receita += row.receita
+      map[key].lucro += row.lucro
+    }
+    return map
+  }, [margem])
+
+  const { receitaMes, receitaMesAnterior, lucroMes, lucroMesAnterior } = useMemo(() => {
+    const now = new Date()
+    const nowKey = now.toISOString().slice(0, 7)
+    const prev = new Date(now)
+    prev.setMonth(prev.getMonth() - 1)
+    const prevKey = prev.toISOString().slice(0, 7)
+    return {
+      receitaMes: monthlyTotalsAll[nowKey]?.receita ?? 0,
+      receitaMesAnterior: monthlyTotalsAll[prevKey]?.receita ?? 0,
+      lucroMes: monthlyTotalsAll[nowKey]?.lucro ?? 0,
+      lucroMesAnterior: monthlyTotalsAll[prevKey]?.lucro ?? 0,
+    }
+  }, [monthlyTotalsAll])
+
+  const filteredRows = useMemo(() => {
+    if (selectedMonth == null) return margem
+    return margem.filter((row) => {
+      const [y, m] = row.data.split('-')
+      return Number(y) === ANO_TABELA && Number(m) - 1 === selectedMonth
+    })
+  }, [margem, selectedMonth])
+
+  const clientChartData = useMemo(() => {
+    const byPonto = {}
+    for (const row of filteredRows) {
+      byPonto[row.ponto_id] ??= 0
+      byPonto[row.ponto_id] += row.receita
+    }
+    return Object.entries(byPonto)
+      .map(([id, receita]) => ({ nome: nomesPorPonto[id] ?? '—', receita }))
+      .sort((a, b) => b.receita - a.receita)
+  }, [filteredRows, nomesPorPonto])
+
+  const pieData = useMemo(() => {
+    const custo = filteredRows.reduce((sum, r) => sum + r.custo, 0)
+    const lucro = filteredRows.reduce((sum, r) => sum + r.lucro, 0)
+    return [
+      { name: 'Lucro', value: Math.max(lucro, 0), color: '#10b981' },
+      { name: 'Custo', value: Math.max(custo, 0), color: '#ef4444' },
+    ]
+  }, [filteredRows])
 
   const consumoPorTipo = useMemo(() => {
     const byTipo = {}
@@ -84,69 +125,128 @@ export default function Dashboard() {
     }))
   }, [pontos])
 
-  const reposicao = useMemo(
-    () =>
-      pontos
-        .filter((p) => urgencyFromRatio(p.estoque_atual_kg, p.consumo_medio_dia) !== 'ok')
-        .sort((a, b) => a.estoque_atual_kg / a.capacidade_kg - b.estoque_atual_kg / b.capacidade_kg),
-    [pontos],
-  )
-
-  const totalKg = pontos.reduce((sum, p) => sum + Number(p.estoque_atual_kg || 0), 0)
+  const periodoLabel = selectedMonth != null ? `${MESES_ABREV[selectedMonth]}/${ANO_TABELA}` : 'Total Geral'
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           label="Receita do mês"
-          value={formatCurrency(kpis.receita)}
-          trend={kpis.receitaTrend}
+          value={formatCurrency(receitaMes)}
+          trend={pctChange(receitaMes, receitaMesAnterior)}
           hint="vs mês anterior"
         />
         <StatCard
           label="Lucro líquido"
-          value={formatCurrency(kpis.lucro)}
-          trend={kpis.lucroTrend}
+          value={formatCurrency(lucroMes)}
+          trend={pctChange(lucroMes, lucroMesAnterior)}
           hint="vs mês anterior"
         />
-        <StatCard label="Gelo em estoque" value={formatKg(totalKg)} hint="em todos os pontos" />
-        <StatCard label="Pontos ativos" value={kpis.pontosAtivos} hint={`de ${pontos.length} cadastrados`} />
+        <StatCard
+          label="Gelo em estoque (fábrica)"
+          value={formatKg(fabrica?.estoque_atual_kg)}
+          hint={formatUltimaAtualizacao(fabrica?.ultima_atualizacao)}
+        />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <ChartCard title="Receita vs Custo — últimos 30 dias" actions={null}>
-          <div className="h-64">
+      <div className={tableCardClass}>
+        <div className={tableHeaderRowClass}>
+          <h3 className="font-display text-sm font-semibold text-navy-950 dark:text-white">
+            Faturamento por Mês — {ANO_TABELA}
+          </h3>
+          <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+            Clica num mês pra ver o faturamento por cliente e o lucro só daquele período.
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <div className="grid grid-flow-col divide-x divide-slate-100 dark:divide-navy-700" style={{ gridAutoColumns: '78px' }}>
+            {monthlyData.map((m) => (
+              <button
+                key={m.mes}
+                onClick={() => setSelectedMonth((cur) => (cur === m.mes ? null : m.mes))}
+                className={`flex flex-col items-center gap-1 px-2 py-3 transition-colors ${
+                  selectedMonth === m.mes
+                    ? 'bg-cyan-50 dark:bg-cyan-500/10'
+                    : 'hover:bg-slate-50 dark:hover:bg-navy-800'
+                }`}
+              >
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                  {m.label}
+                </span>
+                <span
+                  className={`text-xs font-semibold ${
+                    selectedMonth === m.mes ? 'text-cyan-700 dark:text-cyan-400' : 'text-navy-950 dark:text-white'
+                  }`}
+                >
+                  {formatCurrencyCompact(m.receita)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+        {selectedMonth != null && (
+          <div className="border-t border-slate-100 px-5 py-3 dark:border-navy-700">
+            <button
+              onClick={() => setSelectedMonth(null)}
+              className="text-xs font-medium text-cyan-600 hover:underline dark:text-cyan-400"
+            >
+              ← Limpar seleção (voltar pro total geral)
+            </button>
+          </div>
+        )}
+      </div>
+
+      <ChartCard title={`Faturamento por Cliente — ${periodoLabel}`}>
+        {loading && <p className="py-8 text-center text-sm text-slate-400 dark:text-slate-500">Carregando...</p>}
+        {!loading && clientChartData.length === 0 && (
+          <p className="py-8 text-center text-sm text-slate-400 dark:text-slate-500">Sem vendas nesse período.</p>
+        )}
+        {!loading && clientChartData.length > 0 && (
+          <div style={{ height: Math.max(clientChartData.length * 34, 140) }}>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dailySeries}>
-                <defs>
-                  <linearGradient id="receitaGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="custoGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+              <BarChart data={clientChartData} layout="vertical" margin={{ left: 8, right: 16 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} horizontal={false} />
                 <XAxis
-                  dataKey="data"
+                  type="number"
                   tick={{ fontSize: 11, fill: axisColor }}
-                  tickFormatter={(v) => v.slice(8, 10) + '/' + v.slice(5, 7)}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => formatCurrencyCompact(v)}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="nome"
+                  width={110}
+                  tick={{ fontSize: 11, fill: axisColor }}
                   axisLine={false}
                   tickLine={false}
                 />
-                <YAxis tick={{ fontSize: 11, fill: axisColor }} axisLine={false} tickLine={false} />
+                <Tooltip formatter={(v) => formatCurrency(v)} />
+                <Bar dataKey="receita" name="Faturamento" fill="#06b6d4" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </ChartCard>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <ChartCard title={`Faturamento x Lucro — ${periodoLabel}`}>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={2}>
+                  {pieData.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
+                  ))}
+                </Pie>
                 <Tooltip formatter={(v) => formatCurrency(v)} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Area type="monotone" dataKey="receita" name="Receita" stroke="#06b6d4" fill="url(#receitaGradient)" strokeWidth={2} />
-                <Area type="monotone" dataKey="custo" name="Custo" stroke="#ef4444" fill="url(#custoGradient)" strokeWidth={2} />
-              </AreaChart>
+              </PieChart>
             </ResponsiveContainer>
           </div>
         </ChartCard>
 
-        <ChartCard title="Consumo por tipo de ponto">
+        <ChartCard title="Consumo por Tipo de Ponto">
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -169,50 +269,6 @@ export default function Dashboard() {
           </div>
         </ChartCard>
       </div>
-
-      <div className="rounded-card border border-slate-200 bg-white shadow-card dark:border-navy-700 dark:bg-navy-900">
-        <div className="border-b border-slate-100 px-5 py-4 dark:border-navy-700">
-          <h3 className="font-display text-sm font-semibold text-navy-950 dark:text-white">Pontos que Precisam de Reposição</h3>
-        </div>
-        <div className="divide-y divide-slate-100 dark:divide-navy-700">
-          {loading && <p className="px-5 py-6 text-sm text-slate-400 dark:text-slate-500">Carregando...</p>}
-          {!loading && reposicao.length === 0 && (
-            <p className="px-5 py-6 text-sm text-slate-400 dark:text-slate-500">Nenhum ponto precisa de reposição agora.</p>
-          )}
-          {reposicao.map((p) => {
-            const ratio = p.estoque_atual_kg / p.capacidade_kg
-            return (
-              <div key={p.id} className="flex items-center gap-4 px-5 py-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-medium text-navy-950 dark:text-white">{p.nome}</p>
-                    <UrgencyBadge status={urgencyFromRatio(p.estoque_atual_kg, p.consumo_medio_dia)} />
-                  </div>
-                  <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{formatKg(p.estoque_atual_kg)} de {formatKg(p.capacidade_kg)}</p>
-                  <div className="mt-2 w-full max-w-xs">
-                    <ProgressBar ratio={ratio} />
-                  </div>
-                </div>
-                <button
-                  onClick={() => setModalPontoId(p.id)}
-                  className="shrink-0 rounded-[10px] bg-navy-950 px-3 py-2 text-xs font-semibold text-white hover:bg-navy-800 dark:bg-cyan-600 dark:hover:bg-cyan-500"
-                >
-                  Registrar Venda
-                </button>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      {modalPontoId && (
-        <VendaModal
-          pontos={pontos}
-          defaultPontoId={modalPontoId}
-          onClose={() => setModalPontoId(null)}
-          onSaved={refresh}
-        />
-      )}
     </div>
   )
 }
